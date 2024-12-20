@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize('blog', 'rocinante', '', {
+const sequelize = new Sequelize('blog', 'rocinante', 'your_password_here', {
   host: 'localhost',
   port: 5432,
   dialect: 'postgres',
