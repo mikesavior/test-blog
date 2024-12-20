@@ -1,10 +1,9 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize('blog', process.env.DB_USERNAME, process.env.DB_PASSWORD, {
+const sequelize = new Sequelize('blog', 'rocinante', process.env.DB_PASSWORD || 'your_password_here', {
   host: 'localhost',
   port: 5432,
-  dialect: 'postgres',
   dialect: 'postgres',
   logging: false, // Set to console.log to see SQL queries
   dialectOptions: {

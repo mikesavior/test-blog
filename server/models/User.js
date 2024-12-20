@@ -36,6 +36,7 @@ User.init({
 }, {
   sequelize,
   modelName: 'User',
+  tableName: 'users',
   hooks: {
     beforeSave: async (user) => {
       if (user.changed('password')) {
