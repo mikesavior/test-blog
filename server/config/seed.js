@@ -1,7 +1,9 @@
+require('dotenv').config();
 const User = require('../models/User');
 const sequelize = require('./database');
 
 const seedDatabase = async () => {
+  console.log('Starting database seed...');
   try {
     // Sync database
     await sequelize.sync({ force: true }); // This will drop existing tables
