@@ -27,7 +27,29 @@ User.init({
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      len: {
+        args: [8, 100],
+        msg: "Password must be between 8 and 100 characters"
+      },
+      is: {
+        args: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
+        msg: "Password must contain at least one letter and one number"
+      }
+    }
+  },
+  refreshToken: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  loginAttempts: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  lockUntil: {
+    type: DataTypes.DATE,
+    allowNull: true
   },
   isAdmin: {
     type: DataTypes.BOOLEAN,
