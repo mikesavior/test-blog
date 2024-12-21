@@ -31,6 +31,23 @@ const seedDatabase = async () => {
       isAdmin: false
     });
 
+    // Create some sample posts
+    const Post = require('../models/Post');
+    
+    await Post.create({
+      title: 'First Blog Post',
+      content: 'This is the content of our first blog post. Welcome to the blog!',
+      published: true,
+      authorId: 1
+    });
+
+    await Post.create({
+      title: 'Getting Started with Node.js',
+      content: 'Node.js is a powerful runtime that lets you build full-stack applications...',
+      published: true,
+      authorId: 2
+    });
+
     console.log('Database seeded successfully');
     process.exit(0);
   } catch (error) {
