@@ -1,2 +1,9 @@
 .aider*
 .env
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
