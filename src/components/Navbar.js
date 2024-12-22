@@ -25,8 +25,14 @@ function Navbar() {
           Blog
         </Typography>
         <Box>
+          <Button color="inherit" component={Link} to="/posts">
+            Posts
+          </Button>
           {isAuthenticated ? (
             <>
+              <Button color="inherit" component={Link} to="/posts/create">
+                Create Post
+              </Button>
               <Typography variant="body1" component="span" sx={{ mr: 2 }}>
                 Welcome, {user?.username}
               </Typography>

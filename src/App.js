@@ -9,6 +9,9 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Dashboard from './components/Dashboard';
 import PrivateRoute from './components/auth/PrivateRoute';
+import PostsList from './components/posts/PostsList';
+import CreatePost from './components/posts/CreatePost';
+import SinglePost from './components/posts/SinglePost';
 
 const theme = createTheme({
   palette: {
@@ -29,6 +32,16 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/posts" element={<PostsList />} />
+          <Route path="/posts/:id" element={<SinglePost />} />
+          <Route
+            path="/posts/create"
+            element={
+              <PrivateRoute>
+                <CreatePost />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -37,7 +50,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/posts" replace />} />
         </Routes>
       </div>
     </ThemeProvider>
