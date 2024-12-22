@@ -1,0 +1,59 @@
+.App {
+  text-align: center;
+}
+
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.auth-form > * {
+  margin: 10px 0;
+}
+
+.post-card {
+  margin: 20px 0;
+  padding: 20px;
+}
+
+.post-title {
+  margin-bottom: 16px;
+}
+
+.post-content {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.post-meta {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin: 10px 0;
+}
+
+.success-message {
+  color: #2e7d32;
+  margin: 10px 0;
+}
