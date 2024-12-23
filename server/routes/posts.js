@@ -1,10 +1,34 @@
 const express = require('express');
 const { Op } = require('sequelize');
+const multer = require('multer');
+const sharp = require('sharp');
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const fs = require('fs');
 const { auth } = require('../middleware/auth');
 const Post = require('../models/Post');
 const User = require('../models/User');
 
 const router = express.Router();
+
+// Configure multer for image upload
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Not an image! Please upload an image.'), false);
+    }
+  },
+});
+
+// Serve static files
+router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Get all posts (admin)
 router.get('/admin', auth, async (req, res) => {
@@ -80,14 +104,35 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Create post
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, upload.array('images', 5), async (req, res) => {
   try {
     const { title, content } = req.body;
+    const images = [];
+
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const filename = `${uuidv4()}.webp`;
+        const filepath = path.join(__dirname, '../uploads/images', filename);
+        
+        await sharp(file.buffer)
+          .resize(1200, 1200, {
+            fit: 'inside',
+            withoutEnlargement: true
+          })
+          .webp({ quality: 80 })
+          .toFile(filepath);
+        
+        images.push(`/api/posts/uploads/images/${filename}`);
+      }
+    }
+
     const post = await Post.create({
       title,
       content,
+      images,
       authorId: req.user.id
     });
+    
     res.status(201).json(post);
   } catch (error) {
     res.status(400).json({ message: 'Error creating post', error: error.message });
@@ -113,7 +158,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update post
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
     if (!post) {
@@ -123,8 +168,49 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
     
-    const { title, content, published } = req.body;
-    await post.update({ title, content, published });
+    const { title, content, published, removedImages } = req.body;
+    const updatedImages = post.images || [];
+    
+    // Remove deleted images
+    if (removedImages) {
+      const imagesToRemove = JSON.parse(removedImages);
+      for (const imageUrl of imagesToRemove) {
+        const filename = path.basename(imageUrl);
+        const filepath = path.join(__dirname, '../uploads/images', filename);
+        if (fs.existsSync(filepath)) {
+          fs.unlinkSync(filepath);
+        }
+        const index = updatedImages.indexOf(imageUrl);
+        if (index > -1) {
+          updatedImages.splice(index, 1);
+        }
+      }
+    }
+
+    // Add new images
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const filename = `${uuidv4()}.webp`;
+        const filepath = path.join(__dirname, '../uploads/images', filename);
+        
+        await sharp(file.buffer)
+          .resize(1200, 1200, {
+            fit: 'inside',
+            withoutEnlargement: true
+          })
+          .webp({ quality: 80 })
+          .toFile(filepath);
+        
+        updatedImages.push(`/api/posts/uploads/images/${filename}`);
+      }
+    }
+
+    await post.update({ 
+      title, 
+      content, 
+      published,
+      images: updatedImages
+    });
     res.json(post);
   } catch (error) {
     res.status(400).json({ message: 'Error updating post', error: error.message });

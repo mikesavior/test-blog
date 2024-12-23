@@ -20,6 +20,10 @@ Post.init({
       notEmpty: true
     }
   },
+  images: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    defaultValue: []
+  },
   published: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
