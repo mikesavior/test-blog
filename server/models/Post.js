@@ -4,6 +4,9 @@ const User = require('./User');
 
 class Post extends Model {}
 
+// Import Image model
+const Image = require('./Image');
+
 Post.init({
   title: {
     type: DataTypes.STRING,
@@ -45,5 +48,7 @@ Post.init({
 // Define associations
 Post.belongsTo(User, { foreignKey: 'authorId' });
 User.hasMany(Post, { foreignKey: 'authorId' });
+Post.hasMany(Image, { foreignKey: 'postId', onDelete: 'CASCADE' });
+Image.belongsTo(Post, { foreignKey: 'postId' });
 
 module.exports = Post;

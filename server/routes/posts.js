@@ -109,6 +109,12 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     const { title, content } = req.body;
     const images = [];
 
+    const post = await Post.create({
+      title,
+      content,
+      authorId: req.user.id
+    });
+
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         const filename = `${uuidv4()}.webp`;
@@ -122,16 +128,13 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
           .webp({ quality: 80 })
           .toFile(filepath);
         
-        images.push(`/api/posts/uploads/images/${filename}`);
+        await Image.create({
+          filename,
+          path: `/api/posts/uploads/images/${filename}`,
+          postId: post.id
+        });
       }
     }
-
-    const post = await Post.create({
-      title,
-      content,
-      images,
-      authorId: req.user.id
-    });
     
     res.status(201).json(post);
   } catch (error) {
@@ -146,6 +149,9 @@ router.get('/:id', async (req, res) => {
       include: [{
         model: User,
         attributes: ['id', 'username', 'isAdmin']
+      },
+      {
+        model: Image
       }]
     });
     if (!post) {
@@ -169,20 +175,18 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
     }
     
     const { title, content, published, removedImages } = req.body;
-    const updatedImages = post.images || [];
     
     // Remove deleted images
     if (removedImages) {
       const imagesToRemove = JSON.parse(removedImages);
-      for (const imageUrl of imagesToRemove) {
-        const filename = path.basename(imageUrl);
-        const filepath = path.join(__dirname, '../uploads/images', filename);
-        if (fs.existsSync(filepath)) {
-          fs.unlinkSync(filepath);
-        }
-        const index = updatedImages.indexOf(imageUrl);
-        if (index > -1) {
-          updatedImages.splice(index, 1);
+      for (const imageId of imagesToRemove) {
+        const image = await Image.findByPk(imageId);
+        if (image) {
+          const filepath = path.join(__dirname, '../uploads/images', image.filename);
+          if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);
+          }
+          await image.destroy();
         }
       }
     }
@@ -201,15 +205,18 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
           .webp({ quality: 80 })
           .toFile(filepath);
         
-        updatedImages.push(`/api/posts/uploads/images/${filename}`);
+        await Image.create({
+          filename,
+          path: `/api/posts/uploads/images/${filename}`,
+          postId: post.id
+        });
       }
     }
 
     await post.update({ 
       title, 
       content, 
-      published,
-      images: updatedImages
+      published
     });
     res.json(post);
   } catch (error) {
