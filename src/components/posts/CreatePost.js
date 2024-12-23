@@ -72,23 +72,29 @@ function CreatePost() {
               content={content}
               onChange={setContent}
               onImageUpload={async (file) => {
-                const formData = new FormData();
-                formData.append('image', file);
-                
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/posts/upload-image', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${token}`
-                  },
-                  body: formData
-                });
-                
-                if (response.ok) {
+                try {
+                  const formData = new FormData();
+                  formData.append('image', file);
+                  
+                  const token = localStorage.getItem('accessToken');
+                  const response = await fetch('/api/posts/upload-image', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                  });
+                  
+                  if (!response.ok) {
+                    throw new Error('Failed to upload image');
+                  }
+
                   const { url } = await response.json();
                   return url;
+                } catch (error) {
+                  console.error('Image upload error:', error);
+                  throw error;
                 }
-                throw new Error('Failed to upload image');
               }}
             />
           </Box>
