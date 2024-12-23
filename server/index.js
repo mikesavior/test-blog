@@ -7,6 +7,13 @@ const authRoutes = require('./routes/auth');
 const app = express();
 const PORT = 5000;
 
+app.use(cors());
+
+if (process.env.NODE_ENV !== "production") {
+  app.use(cors());
+}
+
+
 // Database sync
 sequelize.sync({ alter: true })
   .then(() => console.log('Database synced'))
