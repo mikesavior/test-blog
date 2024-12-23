@@ -61,7 +61,7 @@ router.get('/:id', async (req, res) => {
     const post = await Post.findByPk(req.params.id, {
       include: [{
         model: User,
-        attributes: ['username']
+        attributes: ['id', 'username', 'isAdmin']
       }]
     });
     if (!post) {

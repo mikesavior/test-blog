@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Grid, Card, CardContent, CardActions, Button } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function PostsList() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -35,7 +36,15 @@ function PostsList() {
         {posts.map((post) => (
           <Grid item xs={12} md={6} key={post.id}>
             <Card>
-              <CardContent>
+              <CardContent 
+                sx={{ 
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.03)'
+                  }
+                }}
+                onClick={() => navigate(`/posts/${post.id}`)}
+              >
                 <Typography variant="h5" component="h2">
                   {post.title}
                 </Typography>
