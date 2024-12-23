@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config({path: __dirname + '/.env'});
+require('dotenv').config();
 
 const sequelize = new Sequelize("blog", process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {  
   // user: process.env.POSTGRES_USER,
