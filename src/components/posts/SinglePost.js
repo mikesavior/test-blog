@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Typography, Paper, Box } from '@mui/material';
-import axios from 'axios';
 
 function SinglePost() {
   const [post, setPost] = useState(null);
@@ -11,10 +10,16 @@ function SinglePost() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/posts/${id}`);
-        setPost(response.data);
+        const response = await fetch(`http://localhost:5000/api/posts/${id}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Error fetching post');
+        }
+        
+        setPost(data);
       } catch (error) {
-        setError('Error fetching post');
+        setError(error.message || 'Error fetching post');
       }
     };
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Box } from '@mui/material';
-import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
 function CreatePost() {
@@ -15,13 +14,24 @@ function CreatePost() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      await axios.post('http://localhost:5000/api/posts', 
-        { title, content },
-        { headers: { Authorization: `Bearer ${token}` }}
-      );
+      const response = await fetch('http://localhost:5000/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, content })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Error creating post');
+      }
+      
       navigate('/posts');
     } catch (error) {
-      setError(error.response?.data?.message || 'Error creating post');
+      setError(error.message || 'Error creating post');
     }
   };
 
