@@ -12,10 +12,18 @@ import { useAuth } from '../context/AuthContext';
 function Navbar() {
   const navigate = useNavigate();
   const { isAuthenticated, logout, user } = useAuth();
+  
+  console.log('Navbar render:', { isAuthenticated, user });
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate away even if there's an error
+      navigate('/login');
+    }
   };
 
   return (
@@ -38,11 +46,22 @@ function Navbar() {
                   Manage Posts
                 </Button>
               )}
-              <Typography variant="body1" component="span" sx={{ mr: 2 }}>
+              <Typography variant="body1" component="span" sx={{ mx: 2 }}>
                 Welcome, {user?.username}
               </Typography>
-              <Button color="inherit" onClick={handleLogout}>
-                Logout
+              <Button 
+                color="error"
+                variant="contained"
+                onClick={handleLogout}
+                sx={{ 
+                  fontWeight: 'bold',
+                  px: 3,
+                  '&:hover': {
+                    backgroundColor: '#d32f2f'
+                  }
+                }}
+              >
+                LOGOUT
               </Button>
             </>
           ) : (
