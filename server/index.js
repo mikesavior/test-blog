@@ -12,7 +12,10 @@ sequelize.sync({ alter: true })
   .then(() => console.log('Database synced'))
   .catch(err => console.error('Database sync error:', err));
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 
 // Routes
