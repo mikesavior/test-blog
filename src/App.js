@@ -12,6 +12,7 @@ import PrivateRoute from './components/auth/PrivateRoute';
 import PostsList from './components/posts/PostsList';
 import CreatePost from './components/posts/CreatePost';
 import SinglePost from './components/posts/SinglePost';
+import PostsManager from './components/admin/PostsManager';
 
 const theme = createTheme({
   palette: {
@@ -47,6 +48,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/posts"
+            element={
+              <PrivateRoute>
+                <PostsManager />
               </PrivateRoute>
             }
           />

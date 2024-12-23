@@ -33,6 +33,11 @@ function Navbar() {
               <Button color="inherit" component={Link} to="/posts/create">
                 Create Post
               </Button>
+              {user?.isAdmin && (
+                <Button color="inherit" component={Link} to="/admin/posts">
+                  Manage Posts
+                </Button>
+              )}
               <Typography variant="body1" component="span" sx={{ mr: 2 }}>
                 Welcome, {user?.username}
               </Typography>
