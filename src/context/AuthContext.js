@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
 
 const AuthContext = createContext(null);
 
@@ -32,11 +31,17 @@ export const AuthProvider = ({ children }) => {
         throw new Error('No token found');
       }
 
-      const response = await axios.get('http://localhost:5000/api/auth/me', {
+      const response = await fetch('http://localhost:5000/api/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed');
+      }
 
-      setUser(response.data.user);
+      setUser(data.user);
       setIsAuthenticated(true);
     } catch (error) {
       localStorage.removeItem('accessToken');
@@ -50,12 +55,21 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
       });
 
-      const { accessToken, refreshToken, user } = response.data;
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      const { accessToken, refreshToken, user } = data;
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       
@@ -68,13 +82,21 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, email, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
-        username,
-        email,
-        password
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, email, password })
       });
 
-      const { accessToken, refreshToken, user } = response.data;
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      const { accessToken, refreshToken, user } = data;
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       
@@ -89,9 +111,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('accessToken');
       if (token) {
-        await axios.post('http://localhost:5000/api/auth/logout', {}, {
-          headers: { Authorization: `Bearer ${token}` }
+        const response = await fetch('http://localhost:5000/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         });
+        
+        if (!response.ok) {
+          console.error('Logout failed:', await response.text());
+        }
       }
     } catch (error) {
       console.error('Logout error:', error);
