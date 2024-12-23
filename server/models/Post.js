@@ -23,6 +23,14 @@ Post.init({
   published: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  authorId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   }
 }, {
   sequelize,
