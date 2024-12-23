@@ -16,7 +16,7 @@ const auth = async (req, res, next) => {
     }
 
     req.user = {
-      id: user.id,
+      id: parseInt(user.id),
       username: user.username,
       email: user.email,
       isAdmin: user.isAdmin

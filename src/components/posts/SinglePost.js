@@ -84,7 +84,7 @@ function SinglePost() {
 
   const canEdit = user && (
     user.isAdmin || 
-    String(user.id) === String(post?.authorId)
+    parseInt(user.id) === parseInt(post?.authorId)
   );
   
   console.log('Edit permission check:', {
