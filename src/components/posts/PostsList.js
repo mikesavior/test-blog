@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Grid, Card, CardContent, CardActions, Button } from '@mui/material';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 
 function PostsList() {
   const [posts, setPosts] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/posts');
-        setPosts(response.data);
+        const response = await fetch('http://localhost:5000/api/posts');
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to fetch posts');
+        }
+        
+        setPosts(data);
       } catch (error) {
         console.error('Error fetching posts:', error);
+        setError(error.message);
       }
     };
 
