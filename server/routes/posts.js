@@ -8,6 +8,7 @@ const fs = require('fs');
 const { auth } = require('../middleware/auth');
 const Post = require('../models/Post');
 const User = require('../models/User');
+const { uploadToS3, getSignedDownloadUrl } = require('../utils/s3');
 
 const router = express.Router();
 
@@ -27,8 +28,35 @@ const upload = multer({
   },
 });
 
-// Serve static files
-router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Upload image for rich text editor
+router.post('/upload-image', auth, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    const processedBuffer = await sharp(req.file.buffer)
+      .resize(1200, 1200, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    const filename = `${uuidv4()}.webp`;
+    const s3Key = `uploads/${filename}`;
+    
+    await uploadToS3({
+      buffer: processedBuffer,
+      mimetype: 'image/webp'
+    }, s3Key);
+    
+    const url = await getSignedDownloadUrl(s3Key);
+    res.json({ url });
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading image', error: error.message });
+  }
+});
 
 // Get all posts (admin)
 router.get('/admin', auth, async (req, res) => {

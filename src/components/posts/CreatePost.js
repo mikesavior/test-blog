@@ -6,14 +6,9 @@ import {
   Button, 
   Typography, 
   Box,
-  IconButton,
-  ImageList,
-  ImageListItem,
-  ImageListItemBar
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { useAuth } from '../../context/AuthContext';
+import RichTextEditor from '../editor/RichTextEditor';
 
 function CreatePost() {
   const [title, setTitle] = useState('');
@@ -28,19 +23,16 @@ function CreatePost() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('content', content);
-      selectedFiles.forEach(file => {
-        formData.append('images', file);
-      });
-
       const response = await fetch('/api/posts', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify({
+          title,
+          content
+        })
       });
       
       const data = await response.json();
@@ -75,71 +67,31 @@ function CreatePost() {
             margin="normal"
             required
           />
-          <TextField
-            fullWidth
-            label="Content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            margin="normal"
-            required
-            multiline
-            rows={6}
-          />
           <Box sx={{ mt: 2, mb: 2 }}>
-            <input
-              accept="image/*"
-              style={{ display: 'none' }}
-              id="image-upload"
-              multiple
-              type="file"
-              onChange={(e) => {
-                const files = Array.from(e.target.files);
-                setSelectedFiles(prev => [...prev, ...files]);
+            <RichTextEditor
+              content={content}
+              onChange={setContent}
+              onImageUpload={async (file) => {
+                const formData = new FormData();
+                formData.append('image', file);
                 
-                // Create preview URLs
-                const newPreviewUrls = files.map(file => URL.createObjectURL(file));
-                setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/posts/upload-image', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: formData
+                });
+                
+                if (response.ok) {
+                  const { url } = await response.json();
+                  return url;
+                }
+                throw new Error('Failed to upload image');
               }}
             />
-            <label htmlFor="image-upload">
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<AddPhotoAlternateIcon />}
-              >
-                Add Images
-              </Button>
-            </label>
           </Box>
-
-          {previewUrls.length > 0 && (
-            <ImageList sx={{ width: '100%', height: 200 }} cols={4} rowHeight={164}>
-              {previewUrls.map((url, index) => (
-                <ImageListItem key={index}>
-                  <img
-                    src={url}
-                    alt={`Preview ${index + 1}`}
-                    loading="lazy"
-                    style={{ height: '100%', objectFit: 'cover' }}
-                  />
-                  <ImageListItemBar
-                    actionIcon={
-                      <IconButton
-                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                        onClick={() => {
-                          setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-                          setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-                          URL.revokeObjectURL(url);
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    }
-                  />
-                </ImageListItem>
-              ))}
-            </ImageList>
-          )}
 
           <Button
             type="submit"
