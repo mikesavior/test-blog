@@ -10,7 +10,12 @@ function PostsList() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('api/posts');
+        const token = localStorage.getItem('accessToken');
+        const response = await fetch('api/posts', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const data = await response.json();
         
         if (!response.ok) {
