@@ -11,9 +11,14 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  IconButton
+  IconButton,
+  ImageList,
+  ImageListItem,
+  ImageListItemBar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { useAuth } from '../../context/AuthContext';
 
 function SinglePost() {
@@ -21,6 +26,9 @@ function SinglePost() {
   const [error, setError] = useState('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editedPost, setEditedPost] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+  const [removedImages, setRemovedImages] = useState([]);
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -61,13 +69,22 @@ function SinglePost() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('accessToken');
+      const formData = new FormData();
+      formData.append('title', editedPost.title);
+      formData.append('content', editedPost.content);
+      formData.append('published', editedPost.published || false);
+      formData.append('removedImages', JSON.stringify(removedImages));
+      
+      selectedFiles.forEach(file => {
+        formData.append('images', file);
+      });
+
       const response = await fetch(`/api/posts/${id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(editedPost)
+        body: formData
       });
 
       if (!response.ok) {
@@ -129,6 +146,21 @@ function SinglePost() {
           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
             {post.content}
           </Typography>
+          
+          {post.Images && post.Images.length > 0 && (
+            <ImageList sx={{ width: '100%', maxHeight: 400 }} cols={3} rowHeight={164}>
+              {post.Images.map((image) => (
+                <ImageListItem key={image.id}>
+                  <img
+                    src={image.path}
+                    alt={`Post image ${image.id}`}
+                    loading="lazy"
+                    style={{ height: '100%', objectFit: 'cover' }}
+                  />
+                </ImageListItem>
+              ))}
+            </ImageList>
+          )}
           {canEdit && (
             <Button
               variant="contained"
@@ -146,6 +178,86 @@ function SinglePost() {
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Edit Post</DialogTitle>
         <DialogContent>
+          <Box sx={{ mb: 2 }}>
+            <input
+              accept="image/*"
+              style={{ display: 'none' }}
+              id="edit-image-upload"
+              multiple
+              type="file"
+              onChange={(e) => {
+                const files = Array.from(e.target.files);
+                setSelectedFiles(prev => [...prev, ...files]);
+                
+                // Create preview URLs
+                const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+                setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+              }}
+            />
+            <label htmlFor="edit-image-upload">
+              <Button
+                variant="outlined"
+                component="span"
+                startIcon={<AddPhotoAlternateIcon />}
+              >
+                Add Images
+              </Button>
+            </label>
+          </Box>
+
+          {post.Images && post.Images.length > 0 && (
+            <ImageList sx={{ width: '100%', height: 200 }} cols={4} rowHeight={164}>
+              {post.Images.filter(img => !removedImages.includes(img.id)).map((image) => (
+                <ImageListItem key={image.id}>
+                  <img
+                    src={image.path}
+                    alt={`Post image ${image.id}`}
+                    loading="lazy"
+                    style={{ height: '100%', objectFit: 'cover' }}
+                  />
+                  <ImageListItemBar
+                    actionIcon={
+                      <IconButton
+                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                        onClick={() => setRemovedImages(prev => [...prev, image.id])}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    }
+                  />
+                </ImageListItem>
+              ))}
+            </ImageList>
+          )}
+
+          {previewUrls.length > 0 && (
+            <ImageList sx={{ width: '100%', height: 200 }} cols={4} rowHeight={164}>
+              {previewUrls.map((url, index) => (
+                <ImageListItem key={index}>
+                  <img
+                    src={url}
+                    alt={`New image ${index + 1}`}
+                    loading="lazy"
+                    style={{ height: '100%', objectFit: 'cover' }}
+                  />
+                  <ImageListItemBar
+                    actionIcon={
+                      <IconButton
+                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                        onClick={() => {
+                          setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+                          setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+                          URL.revokeObjectURL(url);
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    }
+                  />
+                </ImageListItem>
+              ))}
+            </ImageList>
+          )}
           <TextField
             fullWidth
             label="Title"
