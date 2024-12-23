@@ -55,6 +55,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log('Attempting login with:', { email, password });
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
@@ -63,7 +64,9 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password })
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
       
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
@@ -76,6 +79,7 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
       setIsAuthenticated(true);
     } catch (error) {
+      console.error('Login error:', error);
       throw new Error(error.response?.data?.message || 'Login failed');
     }
   };
