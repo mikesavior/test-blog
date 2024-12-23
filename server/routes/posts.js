@@ -117,20 +117,26 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
 
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        const filename = `${uuidv4()}.webp`;
-        const filepath = path.join(__dirname, '../uploads/images', filename);
-        
-        await sharp(file.buffer)
+        const processedBuffer = await sharp(file.buffer)
           .resize(1200, 1200, {
             fit: 'inside',
             withoutEnlargement: true
           })
           .webp({ quality: 80 })
-          .toFile(filepath);
+          .toBuffer();
+
+        const filename = `${uuidv4()}.webp`;
+        const s3Key = `posts/${post.id}/${filename}`;
+        
+        const url = await uploadToS3({
+          buffer: processedBuffer,
+          mimetype: 'image/webp'
+        }, s3Key);
         
         await Image.create({
           filename,
-          path: `/api/posts/uploads/images/${filename}`,
+          s3Key,
+          contentType: 'image/webp',
           postId: post.id
         });
       }
@@ -182,10 +188,7 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
       for (const imageId of imagesToRemove) {
         const image = await Image.findByPk(imageId);
         if (image) {
-          const filepath = path.join(__dirname, '../uploads/images', image.filename);
-          if (fs.existsSync(filepath)) {
-            fs.unlinkSync(filepath);
-          }
+          await deleteFromS3(image.s3Key);
           await image.destroy();
         }
       }
