@@ -1,4 +1,5 @@
 const express = require('express');
+const { Op } = require('sequelize');
 const { auth } = require('../middleware/auth');
 const Post = require('../models/Post');
 const User = require('../models/User');
@@ -11,7 +12,37 @@ router.get('/admin', auth, async (req, res) => {
     return res.status(403).json({ message: 'Admin access required' });
   }
   try {
+    const { search, searchBy } = req.query;
+    let whereClause = {
+      authorId: req.user.id
+    };
+    
+    if (search) {
+      const searchCondition = {};
+      switch (searchBy) {
+        case 'title':
+          searchCondition.title = { [Op.iLike]: `%${search}%` };
+          break;
+        case 'content':
+          searchCondition.content = { [Op.iLike]: `%${search}%` };
+          break;
+        case 'user':
+          delete whereClause.authorId;
+          whereClause['$User.username$'] = { [Op.iLike]: `%${search}%` };
+          break;
+        default:
+          delete whereClause.authorId;
+          whereClause[Op.or] = [
+            { title: { [Op.iLike]: `%${search}%` } },
+            { content: { [Op.iLike]: `%${search}%` } },
+            { '$User.username$': { [Op.iLike]: `%${search}%` } }
+          ];
+      }
+      whereClause = { ...whereClause, ...searchCondition };
+    }
+
     const posts = await Post.findAll({
+      where: whereClause,
       include: [{
         model: User,
         attributes: ['username']

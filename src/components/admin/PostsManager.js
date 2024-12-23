@@ -15,10 +15,16 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import { useAuth } from '../../context/AuthContext';
 
 function PostsManager() {
@@ -28,10 +34,19 @@ function PostsManager() {
   const [currentPost, setCurrentPost] = useState(null);
   const { user } = useAuth();
 
-  const fetchPosts = async () => {
+  const [search, setSearch] = useState('');
+  const [searchBy, setSearchBy] = useState('all');
+
+  const fetchPosts = async (searchQuery = '', searchByField = 'all') => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('/api/posts/admin', {
+      const queryParams = new URLSearchParams();
+      if (searchQuery) {
+        queryParams.append('search', searchQuery);
+        queryParams.append('searchBy', searchByField);
+      }
+      
+      const response = await fetch(`/api/posts/admin?${queryParams.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -107,6 +122,46 @@ function PostsManager() {
       <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 4 }}>
         Manage Posts
       </Typography>
+      
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'flex-end' }}>
+        <TextField
+          label="Search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ flexGrow: 1 }}
+        />
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel>Search By</InputLabel>
+          <Select
+            value={searchBy}
+            onChange={(e) => setSearchBy(e.target.value)}
+            label="Search By"
+          >
+            <MenuItem value="all">All Fields</MenuItem>
+            <MenuItem value="title">Title</MenuItem>
+            <MenuItem value="content">Content</MenuItem>
+            <MenuItem value="user">Username</MenuItem>
+          </Select>
+        </FormControl>
+        <Button
+          variant="contained"
+          startIcon={<SearchIcon />}
+          onClick={() => fetchPosts(search, searchBy)}
+        >
+          Search
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setSearch('');
+            setSearchBy('all');
+            fetchPosts();
+          }}
+        >
+          Reset
+        </Button>
+      </Box>
+
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>
           {error}
