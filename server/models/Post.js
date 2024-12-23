@@ -1,11 +1,19 @@
 const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../config/database');
 const User = require('./User');
-
-class Post extends Model {}
-
-// Import Image model
 const Image = require('./Image');
+
+class Post extends Model {
+  async getImagesWithUrls() {
+    if (!this.Images) return [];
+    return Promise.all(
+      this.Images.map(async (image) => ({
+        ...image.toJSON(),
+        url: await image.getSignedUrl()
+      }))
+    );
+  }
+}
 
 Post.init({
   title: {

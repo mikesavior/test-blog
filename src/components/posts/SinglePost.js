@@ -148,18 +148,36 @@ function SinglePost() {
           </Typography>
           
           {post.Images && post.Images.length > 0 && (
-            <ImageList sx={{ width: '100%', maxHeight: 400 }} cols={3} rowHeight={164}>
-              {post.Images.map((image) => (
-                <ImageListItem key={image.id}>
-                  <img
-                    src={image.path}
-                    alt={`Post image ${image.id}`}
-                    loading="lazy"
-                    style={{ height: '100%', objectFit: 'cover' }}
-                  />
-                </ImageListItem>
-              ))}
-            </ImageList>
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Attachments
+              </Typography>
+              <ImageList sx={{ width: '100%', maxHeight: 400 }} cols={3} rowHeight={200}>
+                {post.Images.map((image) => (
+                  <ImageListItem key={image.id}>
+                    <img
+                      src={image.url}
+                      alt={`Post image ${image.id}`}
+                      loading="lazy"
+                      style={{ 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => window.open(image.url, '_blank')}
+                    />
+                    <ImageListItemBar
+                      title={image.filename}
+                      position="bottom"
+                      sx={{
+                        background:
+                          'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
+                      }}
+                    />
+                  </ImageListItem>
+                ))}
+              </ImageList>
+            </Box>
           )}
           {canEdit && (
             <Button

@@ -67,13 +67,36 @@ router.get('/admin', auth, async (req, res) => {
 
     const posts = await Post.findAll({
       where: whereClause,
-      include: [{
-        model: User,
-        attributes: ['username']
-      }],
+      include: [
+        {
+          model: User,
+          attributes: ['username']
+        },
+        {
+          model: Image,
+          attributes: ['id', 's3Key', 'filename', 'contentType']
+        }
+      ],
       order: [['createdAt', 'DESC']]
     });
-    res.json(posts);
+
+    // Get signed URLs for all images
+    const postsWithSignedUrls = await Promise.all(
+      posts.map(async (post) => {
+        const postJson = post.toJSON();
+        if (postJson.Images) {
+          postJson.Images = await Promise.all(
+            postJson.Images.map(async (image) => ({
+              ...image,
+              url: await getSignedDownloadUrl(image.s3Key)
+            }))
+          );
+        }
+        return postJson;
+      })
+    );
+
+    res.json(postsWithSignedUrls);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching posts', error: error.message });
   }

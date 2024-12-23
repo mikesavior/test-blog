@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Grid, Card, CardContent, CardActions, Button } from '@mui/material';
+import { 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  CardActions, 
+  CardMedia,
+  Button 
+} from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 
 function PostsList() {
@@ -41,15 +50,24 @@ function PostsList() {
         {posts.map((post) => (
           <Grid item xs={12} md={6} key={post.id}>
             <Card>
-              <CardContent 
-                sx={{ 
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.03)'
-                  }
-                }}
-                onClick={() => navigate(`/posts/${post.id}`)}
-              >
+              <CardContent>
+                {post.Images && post.Images[0] && (
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={post.Images[0].url}
+                    alt={post.title}
+                    sx={{ 
+                      objectFit: 'cover',
+                      mb: 2,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        opacity: 0.9
+                      }
+                    }}
+                    onClick={() => navigate(`/posts/${post.id}`)}
+                  />
+                )}
                 <Typography variant="h5" component="h2">
                   {post.title}
                 </Typography>
