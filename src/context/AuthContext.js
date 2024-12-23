@@ -16,12 +16,59 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      checkAuth();
-    } else {
-      setLoading(false);
-    }
+    const initializeAuth = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        const storedUser = localStorage.getItem('user');
+        
+        console.log('Auth initialization start:', { 
+          hasToken: !!token, 
+          hasStoredUser: !!storedUser,
+          tokenValue: token,
+          storedUserValue: storedUser
+        });
+        
+        if (token && storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            console.log('Successfully parsed stored user:', parsedUser);
+            
+            // Verify token with server before setting auth state
+            const response = await fetch('/api/auth/me', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+              const { user: verifiedUser } = await response.json();
+              console.log('Server verified user:', verifiedUser);
+              setUser(verifiedUser);
+              setIsAuthenticated(true);
+            } else {
+              throw new Error('Token verification failed');
+            }
+          } catch (error) {
+            console.error('Auth initialization error:', error);
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        } else {
+          console.log('No valid auth data found in storage');
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Fatal auth initialization error:', error);
+        setUser(null);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const checkAuth = async () => {
@@ -55,7 +102,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log('Attempting login with:', { email, password });
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -64,20 +110,22 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password })
       });
 
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
-      
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
       }
 
+      const data = await response.json();
       const { accessToken, refreshToken, user } = data;
+      
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
       
       setUser(user);
       setIsAuthenticated(true);
+      
+      return data;
     } catch (error) {
       console.error('Login error:', error);
       throw new Error(error.response?.data?.message || 'Login failed');
@@ -115,22 +163,21 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('accessToken');
       if (token) {
-        const response = await fetch('/api/auth/logout', {
+        await fetch('/api/auth/logout', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
-        
-        if (!response.ok) {
-          console.error('Logout failed:', await response.text());
-        }
       }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Always clear local storage and state, even if server request fails
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
       setUser(null);
       setIsAuthenticated(false);
     }

@@ -12,10 +12,15 @@ const auth = async (req, res, next) => {
     const user = await User.findByPk(decoded.id);
 
     if (!user) {
-      throw new Error();
+      throw new Error('User not found');
     }
 
-    req.user = user;
+    req.user = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      isAdmin: user.isAdmin
+    };
     next();
   } catch (error) {
     res.status(401).json({ message: 'Please authenticate' });
