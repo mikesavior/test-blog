@@ -31,7 +31,7 @@ function PostsManager() {
   const fetchPosts = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('api/posts/admin', {
+      const response = await fetch('/api/posts/admin', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -60,7 +60,7 @@ function PostsManager() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`api/posts/${currentPost.id}`, {
+      const response = await fetch(`/api/posts/${currentPost.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ function PostsManager() {
     if (window.confirm('Are you sure you want to delete this post?')) {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`api/posts/${id}`, {
+        const response = await fetch(`/api/posts/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
