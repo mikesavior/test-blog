@@ -14,8 +14,6 @@ function CreatePost() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [previewUrls, setPreviewUrls] = useState([]);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -23,16 +21,16 @@ function CreatePost() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', content);
+      
       const response = await fetch('/api/posts', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          title,
-          content
-        })
+        body: formData
       });
       
       const data = await response.json();

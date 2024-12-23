@@ -113,12 +113,19 @@ const RichTextEditor = ({ content, onChange, onImageUpload }) => {
         '& .ProseMirror': {
           outline: 'none',
           height: '100%',
+          textAlign: 'left',
           '& > *': {
             marginBottom: '0.5em',
+          },
+          '& p': {
+            textAlign: 'left',
+            margin: '1em 0',
           },
           '& img': {
             maxWidth: '100%',
             height: 'auto',
+            display: 'block',
+            margin: '1em 0',
           },
         },
       }}
