@@ -51,7 +51,7 @@ function PostsList() {
           <Grid item xs={12} md={6} key={post.id}>
             <Card>
               <CardContent>
-                {post.Images && post.Images[0] && (
+                {post.Images?.length > 0 && post.Images[0]?.url && (
                   <CardMedia
                     component="img"
                     height="200"

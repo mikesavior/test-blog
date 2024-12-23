@@ -8,7 +8,8 @@ const fs = require('fs');
 const { auth } = require('../middleware/auth');
 const Post = require('../models/Post');
 const User = require('../models/User');
-const { uploadToS3, getSignedDownloadUrl } = require('../utils/s3');
+const Image = require('../models/Image');
+const { uploadToS3, deleteFromS3, getSignedDownloadUrl } = require('../utils/s3');
 
 const router = express.Router();
 
@@ -142,13 +143,36 @@ router.get('/', auth, async (req, res) => {
     
     const posts = await Post.findAll({
       where: whereClause,
-      include: [{
-        model: User,
-        attributes: ['username']
-      }],
+      include: [
+        {
+          model: User,
+          attributes: ['username']
+        },
+        {
+          model: Image,
+          required: false
+        }
+      ],
       order: [['createdAt', 'DESC']]
     });
-    res.json(posts);
+
+    // Get signed URLs for all images if they exist
+    const postsWithSignedUrls = await Promise.all(
+      posts.map(async (post) => {
+        const postJson = post.toJSON();
+        if (postJson.Images && postJson.Images.length > 0) {
+          postJson.Images = await Promise.all(
+            postJson.Images.map(async (image) => ({
+              ...image,
+              url: await getSignedDownloadUrl(image.s3Key)
+            }))
+          );
+        }
+        return postJson;
+      })
+    );
+
+    res.json(postsWithSignedUrls);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching posts', error: error.message });
   }
