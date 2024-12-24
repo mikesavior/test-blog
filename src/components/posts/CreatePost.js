@@ -6,6 +6,8 @@ import {
   Button, 
   Typography, 
   Box,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import RichTextEditor from '../editor/RichTextEditor';
@@ -13,6 +15,7 @@ import RichTextEditor from '../editor/RichTextEditor';
 function CreatePost() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [published, setPublished] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -24,6 +27,7 @@ function CreatePost() {
       const formData = new FormData();
       formData.append('title', title);
       formData.append('content', content);
+      formData.append('published', published);
       
       const response = await fetch('/api/posts', {
         method: 'POST',
@@ -39,7 +43,7 @@ function CreatePost() {
         throw new Error(data.message || 'Error creating post');
       }
       
-      navigate('/posts');
+      navigate(`/posts/${data.id}`);
     } catch (error) {
       setError(error.message || 'Error creating post');
     }
@@ -96,6 +100,18 @@ function CreatePost() {
               }}
             />
           </Box>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={published}
+                onChange={(e) => setPublished(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Publish immediately"
+            sx={{ mt: 2, display: 'block' }}
+          />
 
           <Button
             type="submit"
