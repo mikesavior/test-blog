@@ -143,9 +143,16 @@ function SinglePost() {
           <Typography color="textSecondary" gutterBottom>
             By {post.User?.username || 'Anonymous'}
           </Typography>
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
-            {post.content}
+          <Typography color="textSecondary" gutterBottom>
+            Status: {post.published ? 'Published' : 'Draft'}
           </Typography>
+          <div 
+            dangerouslySetInnerHTML={{ __html: post.content }}
+            style={{ 
+              marginBottom: '2rem',
+              textAlign: 'left'
+            }}
+          />
           
           {post.Images && post.Images.length > 0 && (
             <Box sx={{ mt: 3 }}>

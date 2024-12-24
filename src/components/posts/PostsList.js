@@ -73,7 +73,13 @@ function PostsList() {
                   {post.title}
                 </Typography>
                 <Typography color="textSecondary" gutterBottom>
-                  By {post.User?.username || 'Anonymous'}
+                  By {post.User?.username || 'Anonymous'} • {
+                    new Date(post.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                  } • {post.published ? 'Published' : 'Draft'}
                 </Typography>
                 <Typography variant="body2" component="p">
                   {post.content.substring(0, 200)}...
