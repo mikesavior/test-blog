@@ -20,7 +20,7 @@ function PostsList() {
     const fetchPosts = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch('api/posts', {
+        const response = await fetch('/api/posts', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -31,6 +31,7 @@ function PostsList() {
           throw new Error(data.message || 'Failed to fetch posts');
         }
         
+        console.log('Fetched posts:', data);
         setPosts(data);
       } catch (error) {
         console.error('Error fetching posts:', error);
