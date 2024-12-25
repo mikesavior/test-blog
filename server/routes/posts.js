@@ -61,11 +61,14 @@ router.post('/upload-image', auth, upload.single('image'), async (req, res) => {
 
 // Get all posts (admin)
 router.get('/admin', auth, async (req, res) => {
+  console.log(`[Admin Posts] Request from user ${req.user.id} (isAdmin: ${req.user.isAdmin})`);
   if (!req.user.isAdmin) {
+    console.warn(`[Admin Posts] Unauthorized access attempt by user ${req.user.id}`);
     return res.status(403).json({ message: 'Admin access required' });
   }
   try {
     const { search, searchBy } = req.query;
+    console.log(`[Admin Posts] Search query:`, { search, searchBy });
     let whereClause = {
       authorId: req.user.id
     };
@@ -125,8 +128,10 @@ router.get('/admin', auth, async (req, res) => {
       })
     );
 
+    console.log(`[Admin Posts] Successfully fetched ${postsWithSignedUrls.length} posts`);
     res.json(postsWithSignedUrls);
   } catch (error) {
+    console.error('[Admin Posts] Error:', error);
     res.status(500).json({ message: 'Error fetching posts', error: error.message });
   }
 });
@@ -179,8 +184,10 @@ router.get('/', auth, async (req, res) => {
       })
     );
 
+    console.log(`[My Posts] Successfully fetched ${postsWithSignedUrls.length} posts for user ${req.user.id}`);
     res.json(postsWithSignedUrls);
   } catch (error) {
+    console.error('[My Posts] Error:', error);
     res.status(500).json({ message: 'Error fetching posts', error: error.message });
   }
 });
@@ -233,6 +240,7 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
 // Get user's posts
 router.get('/my-posts', auth, async (req, res) => {
   try {
+    console.log(`[My Posts] Fetching posts for user ${req.user.id}`);
     const posts = await Post.findAll({
       where: {
         authorId: req.user.id
@@ -274,8 +282,11 @@ router.get('/my-posts', auth, async (req, res) => {
 // Get single post
 router.get('/:id', auth, async (req, res) => {
   try {
+    console.log(`[Single Post] Fetching post ID: ${req.params.id} for user ${req.user.id}`);
+    
     // Skip findByPk if the ID is not numeric
     if (req.params.id === 'my-posts') {
+      console.warn('[Single Post] Attempted to access my-posts through /:id route');
       return res.status(404).json({ message: 'Invalid post ID' });
     }
     
@@ -289,10 +300,13 @@ router.get('/:id', auth, async (req, res) => {
       }]
     });
     if (!post) {
+      console.warn(`[Single Post] Post ${req.params.id} not found`);
       return res.status(404).json({ message: 'Post not found' });
     }
+    console.log(`[Single Post] Successfully fetched post ${post.id}`);
     res.json(post);
   } catch (error) {
+    console.error('[Single Post] Error:', error);
     res.status(500).json({ message: 'Error fetching post', error: error.message });
   }
 });
