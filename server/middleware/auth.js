@@ -50,13 +50,18 @@ const auth = async (req, res, next) => {
 
 const adminAuth = async (req, res, next) => {
   try {
+    // First run the regular auth middleware
     await auth(req, res, () => {
-      if (!req.user.isAdmin) {
+      // Then check for admin status
+      if (!req.user || !req.user.isAdmin) {
+        console.warn(`[AdminAuth] Non-admin access attempt by user ${req.user?.id}`);
         return res.status(403).json({ message: 'Admin access required' });
       }
+      console.log(`[AdminAuth] Admin access granted to user ${req.user.id}`);
       next();
     });
   } catch (error) {
+    console.error('[AdminAuth] Error:', error);
     res.status(403).json({ message: 'Admin access required' });
   }
 };
