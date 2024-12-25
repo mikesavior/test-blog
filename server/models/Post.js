@@ -21,7 +21,10 @@ Post.init({
     allowNull: false,
     validate: {
       notEmpty: true,
-      len: [3, 100]
+      len: {
+        args: [1, 100],
+        msg: "Title must be between 1 and 100 characters long"
+      }
     }
   },
   content: {

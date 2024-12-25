@@ -196,6 +196,12 @@ router.get('/', auth, async (req, res) => {
 router.post('/', auth, upload.array('images', 5), async (req, res) => {
   try {
     const { title, content } = req.body;
+    console.log('[Create Post] Attempting to create post:', { 
+      title: title?.length, 
+      contentLength: content?.length,
+      hasFiles: req.files?.length > 0 
+    });
+    
     const images = [];
 
     const post = await Post.create({
@@ -233,6 +239,23 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     
     res.status(201).json(post);
   } catch (error) {
+    console.error('[Create Post] Error:', {
+      name: error.name,
+      message: error.message,
+      errors: error.errors
+    });
+    
+    if (error.name === 'SequelizeValidationError') {
+      const validationErrors = error.errors.map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({ 
+        message: 'Validation error', 
+        errors: validationErrors 
+      });
+    }
+    
     res.status(400).json({ message: 'Error creating post', error: error.message });
   }
 });
