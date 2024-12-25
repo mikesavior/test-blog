@@ -112,9 +112,9 @@ function MyPosts() {
                 <Button 
                   size="small" 
                   color="primary" 
-                  onClick={() => navigate(`/posts/${post.id}/edit`)}
+                  onClick={() => navigate(`/posts/${post.id}`)}
                 >
-                  Edit
+                  View/Edit
                 </Button>
               </CardActions>
             </Card>
