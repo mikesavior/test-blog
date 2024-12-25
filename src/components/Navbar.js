@@ -48,25 +48,52 @@ function Navbar() {
           <Button color="inherit" component={Link} to="/posts">
             Posts
           </Button>
-          {isAuthenticated ? (
+          {isAuthenticated && (
             <>
-              <Button color="inherit" component={Link} to="/my-posts">
+              <Button 
+                color="inherit" 
+                component={Link} 
+                to="/my-posts"
+                sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+              >
                 My Posts
               </Button>
-              <Button color="inherit" component={Link} to="/posts/create">
+              <Button 
+                color="inherit" 
+                component={Link} 
+                to="/posts/create"
+                sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+              >
                 Create Post
               </Button>
               {user?.isAdmin && (
                 <>
-                  <Button color="inherit" component={Link} to="/admin/posts">
+                  <Button 
+                    color="inherit" 
+                    component={Link} 
+                    to="/admin/posts"
+                    sx={{ display: { xs: 'none', md: 'inline-flex' } }}
+                  >
                     Manage Posts
                   </Button>
-                  <Button color="inherit" component={Link} to="/admin/users">
+                  <Button 
+                    color="inherit" 
+                    component={Link} 
+                    to="/admin/users"
+                    sx={{ display: { xs: 'none', md: 'inline-flex' } }}
+                  >
                     Manage Users
                   </Button>
                 </>
               )}
-              <Typography variant="body1" component="span" sx={{ mx: 2 }}>
+              <Typography 
+                variant="body1" 
+                component="span" 
+                sx={{ 
+                  mx: 2,
+                  display: { xs: 'none', sm: 'inline' } 
+                }}
+              >
                 Welcome, {user?.username}
               </Typography>
               <Button 
@@ -75,22 +102,13 @@ function Navbar() {
                 onClick={handleLogout}
                 sx={{ 
                   fontWeight: 'bold',
-                  px: 3,
+                  px: { xs: 1, sm: 3 },
                   '&:hover': {
                     backgroundColor: '#d32f2f'
                   }
                 }}
               >
                 LOGOUT
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button color="inherit" onClick={() => navigate('/login')}>
-                Login
-              </Button>
-              <Button color="inherit" onClick={() => navigate('/register')}>
-                Register
               </Button>
             </>
           )}

@@ -241,15 +241,44 @@ function SinglePost() {
             </Box>
           )}
           {canEdit && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<EditIcon />}
-              onClick={handleEdit}
-              sx={{ mt: 2 }}
-            >
-              Edit Post
-            </Button>
+            <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<EditIcon />}
+                onClick={handleEdit}
+              >
+                Edit Post
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={async () => {
+                  if (window.confirm('Are you sure you want to delete this post?')) {
+                    try {
+                      const token = localStorage.getItem('accessToken');
+                      const response = await fetch(`/api/posts/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                          'Authorization': `Bearer ${token}`
+                        }
+                      });
+
+                      if (!response.ok) {
+                        throw new Error('Failed to delete post');
+                      }
+
+                      navigate('/my-posts');
+                    } catch (error) {
+                      setError(error.message);
+                    }
+                  }
+                }}
+              >
+                Delete Post
+              </Button>
+            </Box>
           )}
         </Paper>
       </Box>
