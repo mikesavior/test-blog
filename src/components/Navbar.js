@@ -33,14 +33,14 @@ function Navbar() {
           variant="h6" 
           component="div" 
           sx={{ 
-            flexGrow: 1,
-            textAlign: 'right',
+            textAlign: 'left',
             marginRight: 2
           }}
         >
           Blog
         </Typography>
-        <Box>
+        <Box sx={{ flexGrow: 1 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Button color="inherit" component={Link} to="/posts">
             Posts
           </Button>
@@ -101,7 +101,8 @@ function Navbar() {
                   px: { xs: 1, sm: 3 },
                   '&:hover': {
                     backgroundColor: '#d32f2f'
-                  }
+                  },
+                  marginLeft: 2
                 }}
               >
                 LOGOUT
