@@ -1,13 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import dotenv from 'dotenv';
 import './index.css';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
-
-// Initialize dotenv
-dotenv.config();
 
 // Log environment variables in development
 if (process.env.NODE_ENV === 'development') {
