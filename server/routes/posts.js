@@ -158,18 +158,10 @@ router.get('/admin', auth, async (req, res) => {
 // Get all published posts (public access)
 router.get('/', async (req, res) => {
   try {
-    let whereClause = {};
-    
-    // If user is not admin, show their own posts (published or not)
-    // and other users' published posts
-    if (!req.user.isAdmin) {
-      whereClause = {
-        [Op.or]: [
-          { authorId: req.user.id },
-          { published: true }
-        ]
-      };
-    }
+    // For public access, only show published posts
+    const whereClause = {
+      published: true
+    };
     
     const posts = await Post.findAll({
       where: whereClause,

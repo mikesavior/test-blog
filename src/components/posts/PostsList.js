@@ -19,20 +19,22 @@ function PostsList() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('/api/posts');
-        
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('Raw response data:', data);
+        const response = await fetch('/api/posts', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         
         if (!response.ok) {
-          throw new Error(data.message || 'Failed to fetch posts');
+          throw new Error('Failed to fetch posts');
         }
         
-        setPosts(data);
+        const data = await response.json();
+        setPosts(data.filter(post => post.published));
       } catch (error) {
         console.error('Error fetching posts:', error);
-        setError(error.message);
+        setError('Failed to load posts. Please try again later.');
       }
     };
 
