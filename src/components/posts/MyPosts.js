@@ -10,6 +10,7 @@ import {
   Button,
   Chip
 } from '@mui/material';
+import { sanitizeHtml } from '../../utils/textUtils';
 import { Link, useNavigate } from 'react-router-dom';
 
 function MyPosts() {
@@ -102,7 +103,7 @@ function MyPosts() {
                   sx={{ mb: 2 }}
                 />
                 <Typography variant="body2" component="p">
-                  {post.content.substring(0, 200)}...
+                  {sanitizeHtml(post.content).substring(0, 200)}...
                 </Typography>
               </CardContent>
               <CardActions>

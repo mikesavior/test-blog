@@ -9,6 +9,7 @@ import {
   CardMedia,
   Button 
 } from '@mui/material';
+import { sanitizeHtml } from '../../utils/textUtils';
 import { Link, useNavigate } from 'react-router-dom';
 
 function PostsList() {
@@ -81,7 +82,7 @@ function PostsList() {
                   } • {post.published ? 'Published' : 'Draft'}
                 </Typography>
                 <Typography variant="body2" component="p">
-                  {post.content.substring(0, 200)}...
+                  {sanitizeHtml(post.content).substring(0, 200)}...
                 </Typography>
               </CardContent>
               <CardActions>
