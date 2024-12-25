@@ -31,10 +31,16 @@ function Navbar() {
       <Toolbar>
         <Typography 
           variant="h6" 
-          component="div" 
+          component={Link}
+          to="/posts"
           sx={{ 
             textAlign: 'left',
-            marginRight: 2
+            marginRight: 2,
+            textDecoration: 'none',
+            color: 'inherit',
+            '&:hover': {
+              opacity: 0.8
+            }
           }}
         >
           Blog
