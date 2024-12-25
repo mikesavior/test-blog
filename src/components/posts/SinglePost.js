@@ -226,7 +226,7 @@ function SinglePost() {
                 {post.Images.map((image) => (
                   <ImageListItem key={image.id}>
                     <img
-                      src={image.url}
+                      src={image.url || `https://${process.env.REACT_APP_AWS_BUCKET_NAME}.s3.${process.env.REACT_APP_AWS_REGION}.amazonaws.com/${image.s3Key}`}
                       alt={`Post image ${image.id}`}
                       loading="lazy"
                       style={{ 
