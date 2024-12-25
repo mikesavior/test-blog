@@ -327,7 +327,7 @@ function SinglePost() {
               {post.Images.filter(img => !removedImages.includes(img.id)).map((image) => (
                 <ImageListItem key={image.id}>
                   <img
-                    src={image.path}
+                    src={image.url}
                     alt={`Post image ${image.id}`}
                     loading="lazy"
                     style={{ height: '100%', objectFit: 'cover' }}
