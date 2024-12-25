@@ -270,10 +270,56 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
   }
 });
 
+// Get user's posts
+router.get('/my-posts', auth, async (req, res) => {
+  try {
+    const posts = await Post.findAll({
+      where: {
+        authorId: req.user.id
+      },
+      include: [
+        {
+          model: User,
+          attributes: ['username']
+        },
+        {
+          model: Image,
+          required: false
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    const postsWithSignedUrls = await Promise.all(
+      posts.map(async (post) => {
+        const postJson = post.toJSON();
+        if (postJson.Images && postJson.Images.length > 0) {
+          postJson.Images = await Promise.all(
+            postJson.Images.map(async (image) => ({
+              ...image,
+              url: await getSignedDownloadUrl(image.s3Key)
+            }))
+          );
+        }
+        return postJson;
+      })
+    );
+
+    res.json(postsWithSignedUrls);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching posts', error: error.message });
+  }
+});
+
 // Get single post
 router.get('/:id', async (req, res) => {
   try {
-    const post = await Post.findByPk(req.params.id, {
+    // Skip findByPk if the ID is not numeric
+    if (req.params.id === 'my-posts') {
+      return res.status(404).json({ message: 'Invalid post ID' });
+    }
+    
+    const post = await Post.findByPk(parseInt(req.params.id), {
       include: [{
         model: User,
         attributes: ['id', 'username', 'isAdmin']
