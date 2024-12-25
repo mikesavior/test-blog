@@ -75,8 +75,40 @@ function SinglePost() {
     setEditDialogOpen(true);
   };
 
-  if (error) return <Typography color="error">{error}</Typography>;
-  if (!post) return <Typography>Loading...</Typography>;
+  if (error) {
+    return (
+      <Container maxWidth="md">
+        <Box sx={{ mt: 4 }}>
+          <Paper elevation={3} sx={{ p: 4 }}>
+            <Typography color="error" variant="h5" gutterBottom>
+              {error}
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => navigate('/posts')}
+              sx={{ mt: 2 }}
+            >
+              Back to Posts
+            </Button>
+          </Paper>
+        </Box>
+      </Container>
+    );
+  }
+  
+  if (!post) {
+    return (
+      <Container maxWidth="md">
+        <Box sx={{ mt: 4 }}>
+          <Paper elevation={3} sx={{ p: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              Loading...
+            </Typography>
+          </Paper>
+        </Box>
+      </Container>
+    );
+  }
 
   // Debug information
   console.log('Current user:', user || 'Not logged in');
