@@ -128,7 +128,13 @@ function SinglePost() {
       formData.append('removedImages', JSON.stringify(removedImages));
       
       selectedFiles.forEach(file => {
+        const timestamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0];
+        const filename = `${timestamp}_${file.name}`;
+        const s3Key = `posts/${id}/${filename}`;
+        
         formData.append('images', file);
+        formData.append('s3Keys', s3Key);
+        formData.append('contentTypes', file.type);
       });
 
       const response = await fetch(`/api/posts/${id}`, {
