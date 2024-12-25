@@ -12,7 +12,11 @@ function PrivateRoute({ children }) {
   }
 
   if (isAdminRoute && !user?.isAdmin) {
-    return <Navigate to="/posts" />;
+    // Redirect non-admin users trying to access admin routes to login
+    return <Navigate to="/login" state={{ 
+      from: location,
+      message: "Admin access required. Please login as an administrator."
+    }} />;
   }
 
   return children;

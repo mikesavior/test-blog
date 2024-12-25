@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -23,7 +23,9 @@ const validationSchema = Yup.object({
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const message = location.state?.message;
 
   const handleSubmit = async (values, { setSubmitting, setErrors }) => {
     try {
@@ -49,6 +51,11 @@ function Login() {
           <Typography component="h1" variant="h5" align="center">
             Sign In
           </Typography>
+          {message && (
+            <Typography color="error" align="center" sx={{ mt: 2 }}>
+              {message}
+            </Typography>
+          )}
           <Formik
             initialValues={{ email: '', password: '' }}
             validationSchema={validationSchema}
