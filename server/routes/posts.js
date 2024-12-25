@@ -315,7 +315,7 @@ router.get('/my-posts', auth, async (req, res) => {
 // Get single post
 router.get('/:id', async (req, res) => {
   try {
-    console.log(`[Single Post] Fetching post ID: ${req.params.id} for user ${req.user.id}`);
+    console.log(`[Single Post] Fetching post ID: ${req.params.id}`);
     
     // Skip findByPk if the ID is not numeric
     if (req.params.id === 'my-posts') {
@@ -328,7 +328,7 @@ router.get('/:id', async (req, res) => {
         id: parseInt(req.params.id),
         [Op.or]: [
           { published: true },
-          { authorId: req.user?.id || 0 }
+          ...(req.user ? [{ authorId: req.user.id }] : [])
         ]
       },
       include: [{
