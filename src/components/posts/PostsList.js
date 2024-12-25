@@ -25,13 +25,15 @@ function PostsList() {
             'Authorization': `Bearer ${token}`
           }
         });
+        
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Raw response data:', data);
         
         if (!response.ok) {
           throw new Error(data.message || 'Failed to fetch posts');
         }
         
-        console.log('Fetched posts:', data);
         setPosts(data);
       } catch (error) {
         console.error('Error fetching posts:', error);
