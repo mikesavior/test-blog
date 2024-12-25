@@ -313,7 +313,7 @@ router.get('/my-posts', auth, async (req, res) => {
 });
 
 // Get single post
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     console.log(`[Single Post] Fetching post ID: ${req.params.id}`);
     
@@ -325,7 +325,9 @@ router.get('/:id', auth, async (req, res) => {
     
     const post = await Post.findOne({
       where: {
-        id: parseInt(req.params.id)
+        id: parseInt(req.params.id),
+        // If no user is authenticated, only show published posts
+        ...((!req.header('Authorization')) && { published: true })
       },
       include: [{
         model: User,
