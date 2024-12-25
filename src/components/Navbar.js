@@ -34,12 +34,8 @@ function Navbar() {
           component="div" 
           sx={{ 
             flexGrow: 1,
-            textAlign: 'center',
-            marginRight: 'auto',
-            marginLeft: 'auto',
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)'
+            textAlign: 'right',
+            marginRight: 2
           }}
         >
           Blog
