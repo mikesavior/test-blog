@@ -37,15 +37,18 @@ function SinglePost() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
         console.log('[SinglePost] Fetching post');
+        const token = localStorage.getItem('accessToken');
+        const headers = {
+          'Content-Type': 'application/json'
+        };
         
-        const response = await fetch(`/api/posts/${id}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        // Only add Authorization header if token exists
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`/api/posts/${id}`, { headers });
         
         if (!response.ok) {
           const data = await response.json();
