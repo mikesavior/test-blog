@@ -38,16 +38,18 @@ function SinglePost() {
     const fetchPost = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        if (!token) {
-          throw new Error('No authentication token found');
+        console.log('[SinglePost] Fetching post');
+        
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
 
-        console.log('[SinglePost] Fetching post with token');
         const response = await fetch(`/api/posts/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers
         });
         
         if (!response.ok) {

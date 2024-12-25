@@ -313,7 +313,7 @@ router.get('/my-posts', auth, async (req, res) => {
 });
 
 // Get single post
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     console.log(`[Single Post] Fetching post ID: ${req.params.id} for user ${req.user.id}`);
     
@@ -323,7 +323,14 @@ router.get('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Invalid post ID' });
     }
     
-    const post = await Post.findByPk(parseInt(req.params.id), {
+    const post = await Post.findOne({
+      where: {
+        id: parseInt(req.params.id),
+        [Op.or]: [
+          { published: true },
+          { authorId: req.user?.id || 0 }
+        ]
+      },
       include: [{
         model: User,
         attributes: ['id', 'username', 'isAdmin']
