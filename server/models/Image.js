@@ -4,7 +4,20 @@ const { getSignedDownloadUrl } = require('../utils/s3');
 
 class Image extends Model {
   async getSignedUrl() {
-    return await getSignedDownloadUrl(this.s3Key);
+    try {
+      return await getSignedDownloadUrl(this.s3Key);
+    } catch (error) {
+      console.warn(`Failed to get signed URL for image ${this.id}:`, error.message);
+      // Return the s3Key as a fallback - useful for development/debugging
+      return this.s3Key;
+    }
+  }
+
+  // Optional method that doesn't auto-generate URLs in hooks
+  toJSON() {
+    const values = { ...this.get() };
+    delete values.url; // Remove auto-generated URL
+    return values;
   }
 }
 
@@ -35,14 +48,35 @@ Image.init({
   tableName: 'images',
   hooks: {
     afterFind: async (instances) => {
-      if (Array.isArray(instances)) {
-        await Promise.all(instances.map(async (instance) => {
-          if (instance) {
-            instance.dataValues.url = await instance.getSignedUrl();
+      // Only try to get signed URLs if AWS config is available
+      if (!process.env.AWS_REGION) {
+        console.log('AWS Region not configured - skipping signed URLs');
+        return;
+      }
+
+      try {
+        if (Array.isArray(instances)) {
+          await Promise.all(instances.map(async (instance) => {
+            if (instance) {
+              try {
+                instance.dataValues.url = await instance.getSignedUrl();
+              } catch (error) {
+                console.warn(`Failed to get signed URL for image ${instance.id}:`, error.message);
+                instance.dataValues.url = instance.s3Key; // Fallback
+              }
+            }
+          }));
+        } else if (instances) {
+          try {
+            instances.dataValues.url = await instances.getSignedUrl();
+          } catch (error) {
+            console.warn(`Failed to get signed URL for image ${instances.id}:`, error.message);
+            instances.dataValues.url = instances.s3Key; // Fallback
           }
-        }));
-      } else if (instances) {
-        instances.dataValues.url = await instances.getSignedUrl();
+        }
+      } catch (error) {
+        console.error('Error in afterFind hook:', error);
+        // Don't throw - let the request continue without URLs
       }
     }
   }
