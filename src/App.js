@@ -1,10 +1,11 @@
 import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material';
 import './App.css';
 
 // Components
 import Navbar from './components/Navbar';
+import LandingPage from './components/LandingPage';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Dashboard from './components/Dashboard';
@@ -91,7 +92,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/posts" replace />} />
+          <Route path="/" element={<LandingPage />} />
         </Routes>
       </div>
     </ThemeProvider>
