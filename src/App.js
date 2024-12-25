@@ -13,6 +13,7 @@ import PostsList from './components/posts/PostsList';
 import CreatePost from './components/posts/CreatePost';
 import SinglePost from './components/posts/SinglePost';
 import PostsManager from './components/admin/PostsManager';
+import MyPosts from './components/posts/MyPosts';
 
 const theme = createTheme({
   palette: {
