@@ -1,11 +1,21 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 function PrivateRoute({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} />;
+  }
+
+  if (isAdminRoute && !user?.isAdmin) {
+    return <Navigate to="/posts" />;
+  }
+
+  return children;
 }
 
 export default PrivateRoute;
