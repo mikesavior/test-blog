@@ -57,9 +57,14 @@ function Navbar() {
                 Create Post
               </Button>
               {user?.isAdmin && (
-                <Button color="inherit" component={Link} to="/admin/posts">
-                  Manage Posts
-                </Button>
+                <>
+                  <Button color="inherit" component={Link} to="/admin/posts">
+                    Manage Posts
+                  </Button>
+                  <Button color="inherit" component={Link} to="/admin/users">
+                    Manage Users
+                  </Button>
+                </>
               )}
               <Typography variant="body1" component="span" sx={{ mx: 2 }}>
                 Welcome, {user?.username}

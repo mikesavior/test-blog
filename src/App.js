@@ -13,6 +13,7 @@ import PostsList from './components/posts/PostsList';
 import CreatePost from './components/posts/CreatePost';
 import SinglePost from './components/posts/SinglePost';
 import PostsManager from './components/admin/PostsManager';
+import UserManager from './components/admin/UserManager';
 import MyPosts from './components/posts/MyPosts';
 
 const theme = createTheme({
@@ -70,6 +71,14 @@ function App() {
             element={
               <PrivateRoute>
                 <PostsManager />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <PrivateRoute>
+                <UserManager />
               </PrivateRoute>
             }
           />
