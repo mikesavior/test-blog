@@ -79,9 +79,9 @@ function SinglePost() {
   if (!post) return <Typography>Loading...</Typography>;
 
   // Debug information
-  console.log('Current user:', user);
-  console.log('Post author:', post.authorId);
-  console.log('Can edit?:', user && (user.isAdmin || user.id === post.authorId));
+  console.log('Current user:', user || 'Not logged in');
+  console.log('Post author:', post?.authorId);
+  console.log('Can edit?:', user && (user?.isAdmin || user?.id === post?.authorId));
 
   const handleSave = async () => {
     try {
@@ -127,8 +127,8 @@ function SinglePost() {
   };
 
   const canEdit = user && (
-    user.isAdmin || 
-    parseInt(user.id) === parseInt(post?.authorId)
+    user?.isAdmin || 
+    (user?.id && post?.authorId && parseInt(user.id) === parseInt(post.authorId))
   );
   
   console.log('Edit permission check:', {
