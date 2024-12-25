@@ -107,16 +107,16 @@ const seedDatabase = async () => {
 
     // Create sample images
     await Image.create({
-      filename: 'sample1.webp',
-      s3Key: 'posts/1/sample1.webp',
-      contentType: 'image/webp',
+      filename: '20241202184249_1.jpg',
+      s3Key: 'posts/1/20241202184249_1.jpg',
+      contentType: 'image/jpg',
       postId: imagePost.id
     });
 
     await Image.create({
       filename: 'sample2.webp',
-      s3Key: 'posts/1/sample2.webp',
-      contentType: 'image/webp',
+      s3Key: 'posts/1/20241202184249_1.jpg',
+      contentType: 'image/jpg',
       postId: imagePost.id
     });
 
