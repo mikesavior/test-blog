@@ -4,7 +4,6 @@
   "private": true,
   "proxy": "http://0.0.0.0:5000",
   "dependencies": {
-    "dotenv": "^16.3.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.16.12",
@@ -16,6 +15,7 @@
     "@tiptap/react": "^2.10.4",
     "@tiptap/starter-kit": "^2.10.4",
     "browser-image-compression": "^2.0.2",
+    "dotenv": "^16.4.7",
     "formik": "^2.4.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
