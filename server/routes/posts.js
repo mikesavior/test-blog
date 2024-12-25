@@ -313,7 +313,7 @@ router.get('/my-posts', auth, async (req, res) => {
 });
 
 // Get single post
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
     console.log(`[Single Post] Fetching post ID: ${req.params.id}`);
     
@@ -325,11 +325,7 @@ router.get('/:id', async (req, res) => {
     
     const post = await Post.findOne({
       where: {
-        id: parseInt(req.params.id),
-        [Op.or]: [
-          { published: true },
-          ...(req.user ? [{ authorId: req.user.id }] : [])
-        ]
+        id: parseInt(req.params.id)
       },
       include: [{
         model: User,

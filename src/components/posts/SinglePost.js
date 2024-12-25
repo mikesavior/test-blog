@@ -40,16 +40,11 @@ function SinglePost() {
         const token = localStorage.getItem('accessToken');
         console.log('[SinglePost] Fetching post');
         
-        const headers = {
-          'Content-Type': 'application/json'
-        };
-        
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
         const response = await fetch(`/api/posts/${id}`, {
-          headers
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
         });
         
         if (!response.ok) {
