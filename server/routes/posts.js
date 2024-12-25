@@ -355,6 +355,17 @@ router.get('/:id', async (req, res) => {
       console.warn(`[Single Post] Post ${req.params.id} not found`);
       return res.status(404).json({ message: 'Post not found' });
     }
+
+    // Generate signed URLs for images
+    if (post.Images) {
+      post.Images = await Promise.all(
+        post.Images.map(async (image) => ({
+          ...image.toJSON(),
+          url: await getSignedDownloadUrl(image.s3Key)
+        }))
+      );
+    }
+
     console.log(`[Single Post] Successfully fetched post ${post.id}`);
     res.json(post);
   } catch (error) {
