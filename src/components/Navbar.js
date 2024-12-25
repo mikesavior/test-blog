@@ -73,10 +73,10 @@ function Navbar() {
                   <Button 
                     color="inherit" 
                     component={Link} 
-                    to="/admin/posts"
+                    to="/admin"
                     sx={{ display: { xs: 'none', md: 'inline-flex' } }}
                   >
-                    Manage Posts
+                    Admin Dashboard
                   </Button>
                   <Button 
                     color="inherit" 

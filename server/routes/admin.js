@@ -2,8 +2,38 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { adminAuth } = require('../middleware/auth');
 const User = require('../models/User');
+const Post = require('../models/Post');
 
 const router = express.Router();
+
+// Get admin statistics
+router.get('/stats', adminAuth, async (req, res) => {
+  try {
+    console.log('[Admin] Fetching statistics');
+    
+    // Get post statistics
+    const totalPosts = await Post.count();
+    const publishedPosts = await Post.count({ where: { published: true }});
+    const draftPosts = await Post.count({ where: { published: false }});
+    
+    // Get user statistics
+    const totalUsers = await User.count();
+    const adminUsers = await User.count({ where: { isAdmin: true }});
+    const regularUsers = await User.count({ where: { isAdmin: false }});
+    
+    res.json({
+      totalPosts,
+      publishedPosts,
+      draftPosts,
+      totalUsers,
+      adminUsers,
+      regularUsers
+    });
+  } catch (error) {
+    console.error('[Admin] Error fetching statistics:', error);
+    res.status(500).json({ message: 'Error fetching statistics', error: error.message });
+  }
+});
 
 // Get all users
 router.get('/users', adminAuth, async (req, res) => {

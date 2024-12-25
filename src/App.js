@@ -13,6 +13,7 @@ import PostsList from './components/posts/PostsList';
 import CreatePost from './components/posts/CreatePost';
 import SinglePost from './components/posts/SinglePost';
 import PostsManager from './components/admin/PostsManager';
+import AdminDashboard from './components/admin/AdminDashboard';
 import UserManager from './components/admin/UserManager';
 import MyPosts from './components/posts/MyPosts';
 
@@ -63,6 +64,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute>
+                <AdminDashboard />
               </PrivateRoute>
             }
           />
