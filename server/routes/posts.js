@@ -390,21 +390,36 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
 
     // Add new images
     if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const filename = `${uuidv4()}.webp`;
-        const filepath = path.join(__dirname, '../uploads/images', filename);
-        
-        await sharp(file.buffer)
+      const s3Keys = req.body.s3Keys?.split(',') || [];
+      const contentTypes = req.body.contentTypes?.split(',') || [];
+
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
+        const s3Key = s3Keys[i];
+        const contentType = contentTypes[i];
+
+        if (!s3Key || !contentType) {
+          console.error('Missing s3Key or contentType for file:', file.originalname);
+          continue;
+        }
+
+        const processedBuffer = await sharp(file.buffer)
           .resize(1200, 1200, {
             fit: 'inside',
             withoutEnlargement: true
           })
           .webp({ quality: 80 })
-          .toFile(filepath);
-        
+          .toBuffer();
+
+        await uploadToS3({
+          buffer: processedBuffer,
+          mimetype: 'image/webp'
+        }, s3Key);
+
         await Image.create({
-          filename,
-          path: `/api/posts/uploads/images/${filename}`,
+          filename: path.basename(s3Key),
+          s3Key,
+          contentType: 'image/webp',
           postId: post.id
         });
       }
