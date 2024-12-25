@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config(__dirname + '/.env');
 const express = require('express');
 const cors = require('cors');
 const sequelize = require('./config/database');
