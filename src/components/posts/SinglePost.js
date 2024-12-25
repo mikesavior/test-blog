@@ -234,7 +234,7 @@ function SinglePost() {
                         objectFit: 'cover',
                         cursor: 'pointer'
                       }}
-                      onClick={() => window.open(image.url || `https://${process.env.REACT_APP_AWS_BUCKET_NAME}.s3.${process.env.REACT_APP_AWS_REGION}.amazonaws.com/${image.s3Key}`, '_blank')}
+                      onClick={() => window.open(image.url || `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.REACT_APP_AWS_REGION}.amazonaws.com/${image.s3Key}`, '_blank')}
                     />
                     <ImageListItemBar
                       title={image.filename}
