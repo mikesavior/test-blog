@@ -194,10 +194,10 @@ router.get('/', async (req, res) => {
       })
     );
 
-    console.log(`[My Posts] Successfully fetched ${postsWithSignedUrls.length} posts for user ${req.user.id}`);
+    console.log(`[Public Posts] Successfully fetched ${postsWithSignedUrls.length} published posts`);
     res.json(postsWithSignedUrls);
   } catch (error) {
-    console.error('[My Posts] Error:', error);
+    console.error('[Public Posts] Error:', error);
     res.status(500).json({ message: 'Error fetching posts', error: error.message });
   }
 });
