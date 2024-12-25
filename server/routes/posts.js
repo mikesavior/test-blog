@@ -242,7 +242,7 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
         await Image.create({
           filename,
           s3Key,
-          contentType: 'image/webp',
+          contentType: file.mimetype,
           postId: post.id
         });
       }
