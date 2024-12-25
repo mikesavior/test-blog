@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   IconButton,
   ImageList,
   ImageListItem,
@@ -20,6 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { useAuth } from '../../context/AuthContext';
+import RichTextEditor from '../editor/RichTextEditor';
 
 function SinglePost() {
   const [post, setPost] = useState(null);
@@ -314,15 +314,35 @@ function SinglePost() {
             onChange={(e) => setEditedPost({ ...editedPost, title: e.target.value })}
             margin="normal"
           />
-          <TextField
-            fullWidth
-            label="Content"
-            value={editedPost?.content || ''}
-            onChange={(e) => setEditedPost({ ...editedPost, content: e.target.value })}
-            margin="normal"
-            multiline
-            rows={8}
-          />
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Content
+            </Typography>
+            <RichTextEditor
+              content={editedPost?.content || ''}
+              onChange={(newContent) => setEditedPost({ ...editedPost, content: newContent })}
+              onImageUpload={async (file) => {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/posts/upload-image', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: formData
+                });
+                
+                if (!response.ok) {
+                  throw new Error('Failed to upload image');
+                }
+                
+                const { url } = await response.json();
+                return url;
+              }}
+            />
+          </Box>
           <Box sx={{ mt: 2 }}>
             <Button
               variant={editedPost?.published ? "contained" : "outlined"}
