@@ -8,8 +8,8 @@ import { AuthProvider } from './context/AuthContext';
 // Log environment variables in development
 if (process.env.NODE_ENV === 'development') {
   console.log('Environment Variables:', {
-    AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME,
-    AWS_REGION: process.env.AWS_REGION
+    AWS_BUCKET_NAME: process.env.REACT_APP_AWS_BUCKET_NAME,
+    AWS_REGION: process.env.REACT_APP_AWS_REGION
   });
 }
 
