@@ -21,20 +21,28 @@ function MyPosts() {
     const fetchPosts = async () => {
       try {
         const token = localStorage.getItem('accessToken');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        console.log('[MyPosts] Fetching posts with token');
         const response = await fetch('/api/posts/my-posts', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
-        const data = await response.json();
         
         if (!response.ok) {
+          const data = await response.json();
           throw new Error(data.message || 'Failed to fetch posts');
         }
         
+        const data = await response.json();
+        console.log('[MyPosts] Successfully fetched posts:', data.length);
         setPosts(data);
       } catch (error) {
-        console.error('Error fetching posts:', error);
+        console.error('[MyPosts] Error:', error);
         setError(error.message);
       }
     };

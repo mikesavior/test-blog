@@ -36,15 +36,29 @@ function SinglePost() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`/api/posts/${id}`);
-        const data = await response.json();
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        console.log('[SinglePost] Fetching post with token');
+        const response = await fetch(`/api/posts/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
         if (!response.ok) {
+          const data = await response.json();
           throw new Error(data.message || 'Error fetching post');
         }
         
+        const data = await response.json();
+        console.log('[SinglePost] Successfully fetched post:', data.id);
         setPost(data);
       } catch (error) {
+        console.error('[SinglePost] Error:', error);
         setError(error.message || 'Error fetching post');
       }
     };
