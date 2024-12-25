@@ -13,6 +13,24 @@ const { uploadToS3, deleteFromS3, getSignedDownloadUrl } = require('../utils/s3'
 
 const router = express.Router();
 
+// Helper function to get signed URLs for images
+const getPostsWithSignedUrls = async (posts) => {
+  return Promise.all(
+    posts.map(async (post) => {
+      const postJson = post.toJSON();
+      if (postJson.Images && postJson.Images.length > 0) {
+        postJson.Images = await Promise.all(
+          postJson.Images.map(async (image) => ({
+            ...image,
+            url: await getSignedDownloadUrl(image.s3Key)
+          }))
+        );
+      }
+      return postJson;
+    })
+  );
+};
+
 // Configure multer for image upload
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -137,8 +155,8 @@ router.get('/admin', auth, async (req, res) => {
 });
 
 
-// Get all published posts
-router.get('/', auth, async (req, res) => {
+// Get all published posts (public access)
+router.get('/', async (req, res) => {
   try {
     let whereClause = {};
     

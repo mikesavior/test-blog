@@ -19,12 +19,7 @@ function PostsList() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch('/api/posts', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await fetch('/api/posts');
         
         console.log('Response status:', response.status);
         const data = await response.json();
@@ -51,7 +46,7 @@ function PostsList() {
       </Typography>
       <Grid container spacing={4}>
         {posts.map((post) => (
-          <Grid item xs={12} md={6} key={post.id}>
+          <Grid item xs={12} key={post.id}>
             <Card>
               <CardContent>
                 {post.Images?.length > 0 && post.Images[0]?.url && (
@@ -88,7 +83,13 @@ function PostsList() {
                 </Typography>
               </CardContent>
               <CardActions>
-                <Button size="small" component={Link} to={`/posts/${post.id}`}>
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  component={Link} 
+                  to={`/posts/${post.id}`}
+                  sx={{ mt: 2 }}
+                >
                   Read More
                 </Button>
               </CardActions>
