@@ -50,6 +50,9 @@ function Navbar() {
           </Button>
           {isAuthenticated ? (
             <>
+              <Button color="inherit" component={Link} to="/my-posts">
+                My Posts
+              </Button>
               <Button color="inherit" component={Link} to="/posts/create">
                 Create Post
               </Button>

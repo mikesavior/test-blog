@@ -49,6 +49,14 @@ function App() {
             }
           />
           <Route
+            path="/my-posts"
+            element={
+              <PrivateRoute>
+                <MyPosts />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               <PrivateRoute>

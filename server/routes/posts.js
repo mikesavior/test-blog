@@ -131,6 +131,47 @@ router.get('/admin', auth, async (req, res) => {
   }
 });
 
+// Get user's posts
+router.get('/my-posts', auth, async (req, res) => {
+  try {
+    const posts = await Post.findAll({
+      where: {
+        authorId: req.user.id
+      },
+      include: [
+        {
+          model: User,
+          attributes: ['username']
+        },
+        {
+          model: Image,
+          required: false
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    const postsWithSignedUrls = await Promise.all(
+      posts.map(async (post) => {
+        const postJson = post.toJSON();
+        if (postJson.Images && postJson.Images.length > 0) {
+          postJson.Images = await Promise.all(
+            postJson.Images.map(async (image) => ({
+              ...image,
+              url: await getSignedDownloadUrl(image.s3Key)
+            }))
+          );
+        }
+        return postJson;
+      })
+    );
+
+    res.json(postsWithSignedUrls);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching posts', error: error.message });
+  }
+});
+
 // Get all published posts
 router.get('/', auth, async (req, res) => {
   try {
