@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const multer = require('multer');
 const sharp = require('sharp');
@@ -323,11 +324,24 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Invalid post ID' });
     }
     
+    // Check if there's an auth token and verify it
+    let userId = null;
+    const authHeader = req.header('Authorization');
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.id;
+      } catch (error) {
+        console.warn('[Single Post] Invalid token:', error.message);
+      }
+    }
+
     const post = await Post.findOne({
       where: {
         id: parseInt(req.params.id),
-        // If no user is authenticated, only show published posts
-        ...((!req.header('Authorization')) && { published: true })
+        // Show all posts to the author, only published posts to others
+        ...(!userId && { published: true })
       },
       include: [{
         model: User,
