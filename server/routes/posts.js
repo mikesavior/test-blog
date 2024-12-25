@@ -381,11 +381,33 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
       }
     }
 
+    // Update the post with the new data
     await post.update({ 
       title, 
-      content, 
-      published
+      content,
+      published: published === 'true' || published === true
     });
+
+    // Fetch the updated post with associations
+    const updatedPost = await Post.findByPk(post.id, {
+      include: [{
+        model: User,
+        attributes: ['id', 'username', 'isAdmin']
+      },
+      {
+        model: Image
+      }]
+    });
+
+    // Get signed URLs for images
+    if (updatedPost.Images) {
+      updatedPost.Images = await Promise.all(
+        updatedPost.Images.map(async (image) => ({
+          ...image.toJSON(),
+          url: await getSignedDownloadUrl(image.s3Key)
+        }))
+      );
+    }
     res.json(post);
   } catch (error) {
     res.status(400).json({ message: 'Error updating post', error: error.message });

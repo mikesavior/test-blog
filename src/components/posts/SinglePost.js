@@ -83,6 +83,11 @@ function SinglePost() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('[SinglePost] Saving edited post:', editedPost.id);
       const formData = new FormData();
       formData.append('title', editedPost.title);
       formData.append('content', editedPost.content);
@@ -102,12 +107,17 @@ function SinglePost() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update post');
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to update post');
       }
 
       const updatedPost = await response.json();
+      console.log('[SinglePost] Post updated successfully:', updatedPost.id);
       setPost(updatedPost);
       setEditDialogOpen(false);
+      setSelectedFiles([]);
+      setPreviewUrls([]);
+      setRemovedImages([]);
     } catch (error) {
       setError(error.message);
     }
@@ -313,6 +323,19 @@ function SinglePost() {
             multiline
             rows={8}
           />
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant={editedPost?.published ? "contained" : "outlined"}
+              color={editedPost?.published ? "success" : "primary"}
+              onClick={() => setEditedPost({ 
+                ...editedPost, 
+                published: !editedPost.published 
+              })}
+              sx={{ mr: 1 }}
+            >
+              {editedPost?.published ? "Published" : "Draft"}
+            </Button>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
