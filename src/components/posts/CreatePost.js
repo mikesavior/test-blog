@@ -11,11 +11,13 @@ import {
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import RichTextEditor from '../editor/RichTextEditor';
+import ImageUploader from '../common/ImageUploader';
 
 function CreatePost() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [published, setPublished] = useState(true);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -28,6 +30,11 @@ function CreatePost() {
       formData.append('title', title);
       formData.append('content', content);
       formData.append('published', published);
+      
+      // Append each image to formData
+      selectedImages.forEach((image, index) => {
+        formData.append('images', image);
+      });
       
       const response = await fetch('/api/posts', {
         method: 'POST',
@@ -98,6 +105,17 @@ function CreatePost() {
                   throw error;
                 }
               }}
+            />
+          </Box>
+
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Post Images
+            </Typography>
+            <ImageUploader
+              onImagesSelected={(files) => setSelectedImages(files)}
+              existingImages={[]}
+              onImageRemove={() => {}}
             />
           </Box>
 

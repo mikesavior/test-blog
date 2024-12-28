@@ -1,10 +1,19 @@
 const { DataTypes, Model } = require('sequelize');
 const bcrypt = require('bcryptjs');
+const zxcvbn = require('zxcvbn');
 const sequelize = require('../config/database');
 
 class User extends Model {
   async comparePassword(candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
+    return await bcrypt.compare(candidatePassword, this.password);
+  }
+
+  static validatePassword(password) {
+    const result = zxcvbn(password);
+    if (result.score < 3) {
+      throw new Error('Password too weak. Must include mix of characters, numbers, and be at least 12 characters long.');
+    }
+    return true;
   }
 }
 
@@ -14,7 +23,8 @@ User.init({
     allowNull: false,
     unique: true,
     validate: {
-      notEmpty: true
+      notEmpty: true,
+      len: [3, 50]
     }
   },
   email: {
@@ -26,22 +36,20 @@ User.init({
     }
   },
   password: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(60),
     allowNull: false,
     validate: {
-      len: {
-        args: [8, 100],
-        msg: "Password must be between 8 and 100 characters"
-      },
-      is: {
-        args: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
-        msg: "Password must contain at least one letter and one number"
-      }
+      len: [12],
+      notNull: true,
+      is: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
     }
   },
-  refreshToken: {
-    type: DataTypes.STRING,
-    allowNull: true
+  isAdmin: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  passwordChangedAt: {
+    type: DataTypes.DATE
   },
   loginAttempts: {
     type: DataTypes.INTEGER,
@@ -51,9 +59,29 @@ User.init({
     type: DataTypes.DATE,
     allowNull: true
   },
-  isAdmin: {
+  isVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  verificationToken: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  verificationExpires: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  resetToken: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  resetTokenExpires: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  refreshToken: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   sequelize,
@@ -62,7 +90,10 @@ User.init({
   hooks: {
     beforeSave: async (user) => {
       if (user.changed('password')) {
-        user.password = await bcrypt.hash(user.password, 10);
+        User.validatePassword(user.password);
+        const SALT_ROUNDS = 12;
+        user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
+        user.passwordChangedAt = new Date();
       }
     }
   }

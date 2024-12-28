@@ -20,18 +20,24 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  ImageList,
+  ImageListItem,
+  ImageListItemBar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import { useAuth } from '../../context/AuthContext';
+import ImageUploader from '../common/ImageUploader';
 
 function PostsManager() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [removedImages, setRemovedImages] = useState([]);
   const { user } = useAuth();
 
   const [search, setSearch] = useState('');
@@ -53,7 +59,8 @@ function PostsManager() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch posts');
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch posts');
       }
       
       const data = await response.json();
@@ -69,23 +76,41 @@ function PostsManager() {
 
   const handleEdit = (post) => {
     setCurrentPost(post);
+    setSelectedImages([]);
+    setRemovedImages([]);
     setEditDialogOpen(true);
   };
 
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('accessToken');
+      const formData = new FormData();
+      formData.append('title', currentPost.title);
+      formData.append('content', currentPost.content);
+      formData.append('published', currentPost.published || false);
+      formData.append('removedImages', JSON.stringify(removedImages));
+
+      selectedImages.forEach((file, index) => {
+        const timestamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0];
+        const filename = `${timestamp}_${file.name}`;
+        const s3Key = `posts/${currentPost.id}/${filename}`;
+        
+        formData.append('images', file);
+        formData.append('s3Keys', s3Key);
+        formData.append('contentTypes', file.type);
+      });
+
       const response = await fetch(`/api/posts/${currentPost.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(currentPost)
+        body: formData
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update post');
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to update post');
       }
 
       setEditDialogOpen(false);
@@ -107,7 +132,8 @@ function PostsManager() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to delete post');
+          const data = await response.json();
+          throw new Error(data.message || 'Failed to delete post');
         }
 
         fetchPosts();
@@ -167,6 +193,7 @@ function PostsManager() {
           {error}
         </Typography>
       )}
+      
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -197,7 +224,7 @@ function PostsManager() {
         </Table>
       </TableContainer>
 
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Edit Post</DialogTitle>
         <DialogContent>
           <TextField
@@ -216,10 +243,34 @@ function PostsManager() {
             multiline
             rows={4}
           />
+          
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Images
+            </Typography>
+            <ImageUploader
+              onImagesSelected={setSelectedImages}
+              existingImages={currentPost?.Images?.filter(img => !removedImages.includes(img.id)) || []}
+              onImageRemove={(id) => setRemovedImages(prev => [...prev, id])}
+            />
+          </Box>
+
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant={currentPost?.published ? "contained" : "outlined"}
+              color={currentPost?.published ? "success" : "primary"}
+              onClick={() => setCurrentPost({ 
+                ...currentPost, 
+                published: !currentPost.published 
+              })}
+            >
+              {currentPost?.published ? "Published" : "Draft"}
+            </Button>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
+          <Button onClick={handleSave} variant="contained">Save Changes</Button>
         </DialogActions>
       </Dialog>
     </Container>

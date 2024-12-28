@@ -32,13 +32,11 @@ const getPostsWithSignedUrls = async (posts) => {
   );
 };
 
-// Configure multer for image upload
+// Configure multer
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -74,6 +72,7 @@ router.post('/upload-image', auth, upload.single('image'), async (req, res) => {
     const url = await getSignedDownloadUrl(s3Key);
     res.json({ url });
   } catch (error) {
+    console.error('Error uploading image:', error);
     res.status(500).json({ message: 'Error uploading image', error: error.message });
   }
 });
@@ -125,28 +124,13 @@ router.get('/admin', auth, async (req, res) => {
         },
         {
           model: Image,
-          attributes: ['id', 's3Key', 'filename', 'contentType']
+          required: false
         }
       ],
       order: [['createdAt', 'DESC']]
     });
 
-    // Get signed URLs for all images
-    const postsWithSignedUrls = await Promise.all(
-      posts.map(async (post) => {
-        const postJson = post.toJSON();
-        if (postJson.Images) {
-          postJson.Images = await Promise.all(
-            postJson.Images.map(async (image) => ({
-              ...image,
-              url: await getSignedDownloadUrl(image.s3Key)
-            }))
-          );
-        }
-        return postJson;
-      })
-    );
-
+    const postsWithSignedUrls = await getPostsWithSignedUrls(posts);
     console.log(`[Admin Posts] Successfully fetched ${postsWithSignedUrls.length} posts`);
     res.json(postsWithSignedUrls);
   } catch (error) {
@@ -155,17 +139,12 @@ router.get('/admin', auth, async (req, res) => {
   }
 });
 
-
 // Get all published posts (public access)
 router.get('/', async (req, res) => {
   try {
-    // For public access, only show published posts
-    const whereClause = {
-      published: true
-    };
-    
+    console.log('[Public Posts] Fetching published posts');
     const posts = await Post.findAll({
-      where: whereClause,
+      where: { published: true },
       include: [
         {
           model: User,
@@ -179,95 +158,12 @@ router.get('/', async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    // Get signed URLs for all images if they exist
-    const postsWithSignedUrls = await Promise.all(
-      posts.map(async (post) => {
-        const postJson = post.toJSON();
-        if (postJson.Images && postJson.Images.length > 0) {
-          postJson.Images = await Promise.all(
-            postJson.Images.map(async (image) => ({
-              ...image,
-              url: await getSignedDownloadUrl(image.s3Key)
-            }))
-          );
-        }
-        return postJson;
-      })
-    );
-
+    const postsWithSignedUrls = await getPostsWithSignedUrls(posts);
     console.log(`[Public Posts] Successfully fetched ${postsWithSignedUrls.length} published posts`);
     res.json(postsWithSignedUrls);
   } catch (error) {
     console.error('[Public Posts] Error:', error);
     res.status(500).json({ message: 'Error fetching posts', error: error.message });
-  }
-});
-
-// Create post
-router.post('/', auth, upload.array('images', 5), async (req, res) => {
-  try {
-    const { title, content } = req.body;
-    console.log('[Create Post] Attempting to create post:', { 
-      title: title?.length, 
-      contentLength: content?.length,
-      hasFiles: req.files?.length > 0 
-    });
-    
-    const images = [];
-
-    const post = await Post.create({
-      title,
-      content,
-      authorId: req.user.id
-    });
-
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const processedBuffer = await sharp(file.buffer)
-          .resize(1200, 1200, {
-            fit: 'inside',
-            withoutEnlargement: true
-          })
-          .webp({ quality: 80 })
-          .toBuffer();
-
-        const filename = `${uuidv4()}.webp`;
-        const s3Key = `posts/${post.id}/${filename}`;
-        
-        const url = await uploadToS3({
-          buffer: processedBuffer,
-          mimetype: 'image/webp'
-        }, s3Key);
-        
-        await Image.create({
-          filename,
-          s3Key,
-          contentType: file.mimetype,
-          postId: post.id
-        });
-      }
-    }
-    
-    res.status(201).json(post);
-  } catch (error) {
-    console.error('[Create Post] Error:', {
-      name: error.name,
-      message: error.message,
-      errors: error.errors
-    });
-    
-    if (error.name === 'SequelizeValidationError') {
-      const validationErrors = error.errors.map(err => ({
-        field: err.path,
-        message: err.message
-      }));
-      return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: validationErrors 
-      });
-    }
-    
-    res.status(400).json({ message: 'Error creating post', error: error.message });
   }
 });
 
@@ -292,24 +188,94 @@ router.get('/my-posts', auth, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    const postsWithSignedUrls = await Promise.all(
-      posts.map(async (post) => {
-        const postJson = post.toJSON();
-        if (postJson.Images && postJson.Images.length > 0) {
-          postJson.Images = await Promise.all(
-            postJson.Images.map(async (image) => ({
-              ...image,
-              url: await getSignedDownloadUrl(image.s3Key)
-            }))
-          );
-        }
-        return postJson;
-      })
-    );
-
+    const postsWithSignedUrls = await getPostsWithSignedUrls(posts);
+    console.log(`[My Posts] Successfully fetched ${posts.length} posts`);
     res.json(postsWithSignedUrls);
   } catch (error) {
+    console.error('[My Posts] Error:', error);
     res.status(500).json({ message: 'Error fetching posts', error: error.message });
+  }
+});
+
+// Create post
+router.post('/', auth, upload.array('images', 5), async (req, res) => {
+  try {
+    const { title, content, published = false } = req.body;
+    console.log('[Create Post] Attempting to create post:', { 
+      title: title?.length, 
+      contentLength: content?.length,
+      hasFiles: req.files?.length > 0 
+    });
+    
+    const post = await Post.create({
+      title,
+      content,
+      published: published === 'true' || published === true,
+      authorId: req.user.id
+    });
+
+    if (req.files && req.files.length > 0) {
+      console.log(`[Create Post] Processing ${req.files.length} images`);
+      for (const file of req.files) {
+        const processedBuffer = await sharp(file.buffer)
+          .resize(1200, 1200, {
+            fit: 'inside',
+            withoutEnlargement: true
+          })
+          .webp({ quality: 80 })
+          .toBuffer();
+
+        const filename = `${uuidv4()}.webp`;
+        const s3Key = `posts/${post.id}/${filename}`;
+        
+        await uploadToS3({
+          buffer: processedBuffer,
+          mimetype: 'image/webp'
+        }, s3Key);
+        
+        await Image.create({
+          filename,
+          s3Key,
+          contentType: 'image/webp',
+          postId: post.id
+        });
+      }
+    }
+
+    const fullPost = await Post.findByPk(post.id, {
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'username', 'isAdmin']
+        },
+        {
+          model: Image
+        }
+      ]
+    });
+
+    const postWithUrls = await getPostsWithSignedUrls([fullPost]);
+    console.log(`[Create Post] Successfully created post ${post.id}`);
+    res.status(201).json(postWithUrls[0]);
+  } catch (error) {
+    console.error('[Create Post] Error:', {
+      name: error.name,
+      message: error.message,
+      errors: error.errors
+    });
+    
+    if (error.name === 'SequelizeValidationError') {
+      const validationErrors = error.errors.map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({ 
+        message: 'Validation error', 
+        errors: validationErrors 
+      });
+    }
+    
+    res.status(400).json({ message: 'Error creating post', error: error.message });
   }
 });
 
@@ -318,13 +284,11 @@ router.get('/:id', async (req, res) => {
   try {
     console.log(`[Single Post] Fetching post ID: ${req.params.id}`);
     
-    // Skip findByPk if the ID is not numeric
     if (req.params.id === 'my-posts') {
       console.warn('[Single Post] Attempted to access my-posts through /:id route');
       return res.status(404).json({ message: 'Invalid post ID' });
     }
     
-    // Check if there's an auth token and verify it
     let userId = null;
     const authHeader = req.header('Authorization');
     if (authHeader) {
@@ -340,7 +304,6 @@ router.get('/:id', async (req, res) => {
     const post = await Post.findOne({
       where: {
         id: parseInt(req.params.id),
-        // Show all posts to the author, only published posts to others
         ...(!userId && { published: true })
       },
       include: [{
@@ -351,23 +314,15 @@ router.get('/:id', async (req, res) => {
         model: Image
       }]
     });
+
     if (!post) {
       console.warn(`[Single Post] Post ${req.params.id} not found`);
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Generate signed URLs for images
-    if (post.Images) {
-      post.Images = await Promise.all(
-        post.Images.map(async (image) => ({
-          ...image.toJSON(),
-          url: await getSignedDownloadUrl(image.s3Key)
-        }))
-      );
-    }
-
+    const postWithUrls = await getPostsWithSignedUrls([post]);
     console.log(`[Single Post] Successfully fetched post ${post.id}`);
-    res.json(post);
+    res.json(postWithUrls[0]);
   } catch (error) {
     console.error('[Single Post] Error:', error);
     res.status(500).json({ message: 'Error fetching post', error: error.message });
@@ -377,18 +332,20 @@ router.get('/:id', async (req, res) => {
 // Update post
 router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
   try {
+    console.log(`[Update Post] Attempting to update post ${req.params.id}`);
     const post = await Post.findByPk(req.params.id);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
     if (post.authorId !== req.user.id && !req.user.isAdmin) {
+      console.warn(`[Update Post] Unauthorized attempt by user ${req.user.id}`);
       return res.status(403).json({ message: 'Not authorized' });
     }
     
     const { title, content, published, removedImages } = req.body;
     
-    // Remove deleted images
     if (removedImages) {
+      console.log(`[Update Post] Removing images: ${removedImages}`);
       const imagesToRemove = JSON.parse(removedImages);
       for (const imageId of imagesToRemove) {
         const image = await Image.findByPk(imageId);
@@ -399,18 +356,17 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
       }
     }
 
-    // Add new images
     if (req.files && req.files.length > 0) {
+      console.log(`[Update Post] Processing ${req.files.length} new images`);
       const s3Keys = req.body.s3Keys?.split(',') || [];
       const contentTypes = req.body.contentTypes?.split(',') || [];
 
       for (let i = 0; i < req.files.length; i++) {
         const file = req.files[i];
         const s3Key = s3Keys[i];
-        const contentType = contentTypes[i];
 
-        if (!s3Key || !contentType) {
-          console.error('Missing s3Key or contentType for file:', file.originalname);
+        if (!s3Key) {
+          console.error('Missing s3Key for file:', file.originalname);
           continue;
         }
 
@@ -436,14 +392,12 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
       }
     }
 
-    // Update the post with the new data
     await post.update({ 
       title, 
       content,
       published: published === 'true' || published === true
     });
 
-    // Fetch the updated post with associations
     const updatedPost = await Post.findByPk(post.id, {
       include: [{
         model: User,
@@ -454,17 +408,11 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
       }]
     });
 
-    // Get signed URLs for images
-    if (updatedPost.Images) {
-      updatedPost.Images = await Promise.all(
-        updatedPost.Images.map(async (image) => ({
-          ...image.toJSON(),
-          url: await getSignedDownloadUrl(image.s3Key)
-        }))
-      );
-    }
-    res.json(post);
+    const postWithUrls = await getPostsWithSignedUrls([updatedPost]);
+    console.log(`[Update Post] Successfully updated post ${post.id}`);
+    res.json(postWithUrls[0]);
   } catch (error) {
+    console.error('[Update Post] Error:', error);
     res.status(400).json({ message: 'Error updating post', error: error.message });
   }
 });
@@ -472,17 +420,29 @@ router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
 // Delete post
 router.delete('/:id', auth, async (req, res) => {
   try {
+    console.log(`[Delete Post] Attempting to delete post ${req.params.id}`);
     const post = await Post.findByPk(req.params.id);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
     if (post.authorId !== req.user.id && !req.user.isAdmin) {
+      console.warn(`[Delete Post] Unauthorized attempt by user ${req.user.id}`);
       return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Delete associated images from S3
+    const images = await Image.findAll({
+      where: { postId: post.id }
+    });
+
+    for (const image of images) {
+      await deleteFromS3(image.s3Key);
     }
     
     await post.destroy();
     res.json({ message: 'Post deleted successfully' });
   } catch (error) {
+    console.error('[Delete Post] Error:', error);
     res.status(500).json({ message: 'Error deleting post', error: error.message });
   }
 });

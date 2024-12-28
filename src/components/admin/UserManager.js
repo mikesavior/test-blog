@@ -41,7 +41,8 @@ function UserManager() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch users');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch users');
       }
 
       const data = await response.json();
@@ -58,7 +59,7 @@ function UserManager() {
   const handleEdit = (user) => {
     setCurrentUser({
       ...user,
-      password: '' // Clear password field for security
+      password: ''
     });
     setEditDialogOpen(true);
   };
@@ -66,22 +67,28 @@ function UserManager() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/admin/users/${currentUser.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: currentUser.username,
-          email: currentUser.email,
-          password: currentUser.password || undefined, // Only send if changed
-          isAdmin: currentUser.isAdmin
-        })
-      });
+      const isNewUser = !currentUser.id;
+
+      const response = await fetch(
+        isNewUser ? '/api/admin/users' : `/api/admin/users/${currentUser.id}`,
+        {
+          method: isNewUser ? 'POST' : 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: currentUser.username,
+            email: currentUser.email,
+            password: currentUser.password || undefined,
+            isAdmin: currentUser.isAdmin
+          })
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to update user');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save user');
       }
 
       setEditDialogOpen(false);
@@ -103,7 +110,8 @@ function UserManager() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to delete user');
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to delete user');
         }
 
         fetchUsers();
@@ -113,7 +121,7 @@ function UserManager() {
     }
   };
 
-  const handleCreateUser = async () => {
+  const handleCreateUser = () => {
     setCurrentUser({
       username: '',
       email: '',

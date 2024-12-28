@@ -20,6 +20,9 @@ function Dashboard() {
           <Box sx={{ mt: 4 }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
+              <Typography variant="h6" gutterBottom>
+                Post Controls
+              </Typography>
                 <Button
                   component={Link}
                   to="/my-posts"
